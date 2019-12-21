@@ -106,21 +106,6 @@ class Machine(object):
             PC=self.power_consumption_Idl*Delta_t
         return PC
 
-#    def StateTransition(self, p_Brk, p_Opr, p_Blo, p_Sta, p_Off):
-        #Transit the current machine state to the next machine state according to given transition probabilites#
-        #Notice that these transition probabilities are CONDITIONAL PROBABILITIES conditioned on the current state#
-#       state=np.random.choice(5, 1, p=[p_Brk, p_Opr, p_Blo, p_Sta, p_Off])
-#        if state==1:
-#            self.machine_state="Brk"
-#        elif state==2:
-#            self.machine_state="Opr"
-#        elif state==3:
-#            self.machine_state="Blo"
-#        elif state==4:
-#            self.machine_state="Sta"
-#        elif state==5:
-#            self.machine_state="Off"
-
     def LastMachineProduction(self):
         #only the last machine will produce that contributes to the throughput, when the state is Opr and the control action is K#
         throughput=0
@@ -149,7 +134,7 @@ class Machine(object):
             else:
                 IsBrk=False
         return IsBrk
-
+        
 """
 the Buffer class defines variables and functions of one buffer
 """
@@ -279,20 +264,27 @@ class Microgrid(object):
         #calculate the sold back reward (benefit)#
         return (self.actions_solar[3-1]+self.actions_wind[3-1]+self.actions_generator[3-1])*unit_reward_soldbackenergy
     
+"""    
+Combining the above three classes, define the variables and functions for the whole manufacturing system
+"""
+
+#class ManufacturingSystem(object):
     
     
     
     
     
+
     
-Machine1=Machine()    
-print(Machine1.machine_state)
-print(Machine1.NextState_IsBrk())    
-Buffer1=Buffer()
-print(Buffer1.NextState())
-Microgrid=Microgrid()
-Microgrid.transition()
-print(Microgrid.workingstatus)
-print(Microgrid.EnergyConsumption())
-print(Microgrid.OperationalCost())
-print(Microgrid.SoldBackReward())
+if __name__ == "__main__":
+    Machine1=Machine()    
+    print(Machine1.machine_state)
+    print(Machine1.NextState_IsBrk())    
+    Buffer1=Buffer()
+    print(Buffer1.NextState())
+    Microgrid=Microgrid()
+    Microgrid.transition()
+    print(Microgrid.workingstatus)
+    print(Microgrid.EnergyConsumption())
+    print(Microgrid.OperationalCost())
+    print(Microgrid.SoldBackReward())
