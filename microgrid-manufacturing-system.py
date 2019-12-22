@@ -70,7 +70,7 @@ the Machine class defines the variables and functions of one machine
 """
 class Machine(object):
     def __init__(self,
-                 name,
+                 name=1,
                  #the label of this machine#
                  lifetime_shape_parameter=1, 
                  #random lifetime of machine follows Weibull distribution with shape parameter lifetime_shape_parameter
@@ -150,7 +150,7 @@ class Machine(object):
         print("is last machine (T/F) = ", self.is_last_machine)
         print("throughtput = ", self.LastMachineProduction())
         print("next state is Brk (T/F) = ", self.NextState_IsBrk())    
-
+        return "***Machine printed***"
         
         
         
@@ -159,7 +159,7 @@ the Buffer class defines variables and functions of one buffer
 """
 class Buffer(object):
     def __init__(self, 
-                 name,
+                 name=1,
                  #the label of this buffer#
                  state=0,
                  #the buffer state is an integer from buffer_min (=0) to buffer_max 
@@ -204,8 +204,7 @@ class Buffer(object):
         print("Buffer ", self.name, ": ")
         print("buffer state = ", self.state)
         print("next buffer state = ", self.NextState())
-        
-        
+        return "***Buffer printed***"
         
 """
 the Microgrid class defines variables and functions of the microgrid
@@ -309,7 +308,7 @@ class Microgrid(object):
         print("Microgrid Energy Consunption = ", self.EnergyConsumption())
         print("Microgrid Operational Cost = ", self.OperationalCost())
         print("Microgrid SoldBackReward = ", self.SoldBackReward())
-
+        return "***Microgrid printed***"
 
 
 """    
@@ -317,32 +316,69 @@ Combining the above three classes, define the variables and functions for the wh
 """
 class ManufacturingSystem(object):
     def __init__(self,
-                 machine_states=["Off", "Off", "Brk"],
+                 machine_states=["Opr", "Off", "Brk"],
                  #set the machine states for all machines in the manufacturing system#
+                 machine_control_actions=["K", "K", "W"],
+                 #set the control actions for all machines in the manufacturing system#
                  buffer_states=[0,0]
                  #set the buffer states for all buffers in the manufacturing system#
                  ):
         self.machine_states=machine_states
+        self.machine_control_actions=machine_control_actions
         self.buffer_states=buffer_states
         #initialize all machines, ManufacturingSystem.machine=[Machine1, Machine2, ..., Machine_{number_machines}]#
         self.machine=[]
         for i in range(number_machines):
             if i!=number_machines-1:
-                self.machine.append(Machine(name=i+1, state=self.machine_states[i], is_last_machine=False))
+                self.machine.append(Machine(name=i+1, 
+                                            state=self.machine_states[i], 
+                                            control_action=self.machine_control_actions[i], 
+                                            is_last_machine=False))
             else:
-                self.machine.append(Machine(name=i+1, state=self.machine_states[i], is_last_machine=True))
+                self.machine.append(Machine(name=i+1, 
+                                            state=self.machine_states[i], 
+                                            control_action=self.machine_control_actions[i], 
+                                            is_last_machine=True))
         #initialize all buffers, ManufacturingSystem.buffer=[Buffer1, Buffer2, ..., Buffer_{numbers_machines-1}]
         self.buffer=[]
         for j in range(number_machines-1):
-            self.buffer.append(Buffer(name=j+1, state=self.buffer_states[j], previous_machine_state=self.machine[j].state, next_machine_state=self.machine[j+1].state))
+            self.buffer.append(Buffer(name=j+1, 
+                                      state=self.buffer_states[j], 
+                                      previous_machine_state=self.machine[j].state, 
+                                      next_machine_state=self.machine[j+1].state,
+                                      previous_machine_control_action=self.machine[j].control_action,
+                                      next_machine_control_action=self.machine[j+1].control_action
+                                      ))
     
-    
+    def transition(self):
+        #based on current states and current control actions of the whole manufacturing system, calculate states at the the next decision epoch#
+        #states include machine states, buffer states and microgrid states#
+        for j in range(number_machines-1):
+        #based on current machine states and control actions taken, calculate the next states of all buffers#    
+            self.buffer[j].state=self.buffer[j].NextState()
+        for i in range(number_machines):
+            if self.machine[i].NextState_IsBrk():
+                self.machine[i].state="Brk"
+            else:
+                if i==0:
+                    self.machine[i].state=
+                
+
+
 
     
 if __name__ == "__main__":
     ManufacturingSystem=ManufacturingSystem()
     for i in range(number_machines):
-        print("i=", i)
+        print("----------------- i=", i, "-----------------")
         print(ManufacturingSystem.machine[i].PrintMachine())
         if i!=number_machines-1:
             print(ManufacturingSystem.buffer[i].PrintBuffer())
+    ManufacturingSystem.transition()
+    print("----------------- One Step Transition -----------------")
+    for i in range(number_machines):
+        print("----------------- i=", i, "-----------------")
+        print(ManufacturingSystem.machine[i].PrintMachine())
+        if i!=number_machines-1:
+            print(ManufacturingSystem.buffer[i].PrintBuffer())
+        
