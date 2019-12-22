@@ -1,5 +1,6 @@
 """
 MDP for joint control of microgrid and manufactoring system
+author: Wenqing Hu (Missouri S&T)
 """
 import numpy as np
 
@@ -57,6 +58,8 @@ number_windturbine=10
 #the number of wind turbine in the onsite generation system, N_w#
 unit_reward_soldbackenergy=1
 #the unit reward from sold back energy, r^sb#
+number_machines=3
+#the total number of machines in the manufacturing system, total number of buffers=number_machines-1#
 
 
 """
@@ -66,7 +69,9 @@ Define 3 major classes in the system: Machine, Buffer, Microgrid
 the Machine class defines the variables and functions of one machine
 """
 class Machine(object):
-    def __init__(self, 
+    def __init__(self,
+                 name,
+                 #the label of this machine#
                  lifetime_shape_parameter=1, 
                  #random lifetime of machine follows Weibull distribution with shape parameter lifetime_shape_parameter
                  lifetime_scale_parameter=1,
@@ -77,20 +82,21 @@ class Machine(object):
                  #amount of power drawn by the machine if the machine state is Opr (Operating)
                  power_consumption_Idl=1,
                  #amount of power drawn by the machine if the machine state is Sta (Starvation) or Blo (Blockage), both are Idl (Idle) states
-                 machine_state="Off",
+                 state="OFF",
                  #machine state can be "Opr" (Operating), "Blo" (Blockage), "Sta" (Starvation), "Off", "Brk" (Break)
                  control_action="K",
                  #control actions of machine, actions can be "K"-action (keep the original operational), "H"-action (to turn off the machine) or "W"-action (to turn on the machine)#
-                 is_last_machine=True
+                 is_last_machine=False
                  #check whether or not the machine is the last machine in the queue, if it is last machine, then it contributes to the throughput#
                  ):
+        self.name=name
         self.lifetime_shape_parameter=lifetime_shape_parameter
         self.lifetime_scale_parameter=lifetime_scale_parameter
         self.repairtime_mean=repairtime_mean
         self.power_consumption_Opr=power_consumption_Opr
         self.power_consumption_Idl=power_consumption_Idl
         self.unit_reward_production=unit_reward_production
-        self.machine_state=machine_state
+        self.state=state
         self.control_action=control_action
         self.is_last_machine=is_last_machine
     
@@ -98,11 +104,11 @@ class Machine(object):
         #Calculate the energy consumption of one machine in a time unit#
         PC=0 
         #PC is the amount drawn by a machine in a time unit#
-        if self.machine_state=="Brk" or self.machine_state=="Off":
+        if self.state=="Brk" or self.state=="Off":
             PC=0
-        elif self.machine_state=="Opr":
+        elif self.state=="Opr":
             PC=self.power_consumption_Opr*Delta_t
-        elif self.machine_state=="Sta" or self.machine_state=="Blo":
+        elif self.state=="Sta" or self.state=="Blo":
             PC=self.power_consumption_Idl*Delta_t
         return PC
 
@@ -110,9 +116,9 @@ class Machine(object):
         #only the last machine will produce that contributes to the throughput, when the state is Opr and the control action is K#
         throughput=0
         if self.is_last_machine:
-            if self.machine_state!="Opr" or self.control_action=="H":
+            if self.state!="Opr" or self.control_action=="H":
                 throughput=0
-            elif self.machine_state=="Opr" and self.control_action=="K":
+            elif self.state=="Opr" and self.control_action=="K":
                 throughput=1
         return throughput*self.unit_reward_production
     
@@ -123,7 +129,7 @@ class Machine(object):
         #the random variable L is the lifetime#
         D=np.random.exponential(1/self.repairtime_mean)
         #the random variable D is the repair time# 
-        if self.machine_state=="Brk":
+        if self.state=="Brk":
             if D>=Delta_t:
                 IsBrk=True
             else:
@@ -134,13 +140,28 @@ class Machine(object):
             else:
                 IsBrk=False
         return IsBrk
+    
+    def PrintMachine(self):
+        #print the status of the current machine: state, control_action taken, Energy Consumption, throughput, decide whether the next machine state is Brk#
+        print("Machine ", self.name, ": ")
+        print("state = ", self.state)
+        print("control action taken = ", self.control_action)
+        print("Energy Consumption = ", self.EnergyConsumption())
+        print("is last machine (T/F) = ", self.is_last_machine)
+        print("throughtput = ", self.LastMachineProduction())
+        print("next state is Brk (T/F) = ", self.NextState_IsBrk())    
+
+        
+        
         
 """
 the Buffer class defines variables and functions of one buffer
 """
 class Buffer(object):
     def __init__(self, 
-                 buffer_state=0,
+                 name,
+                 #the label of this buffer#
+                 state=0,
                  #the buffer state is an integer from buffer_min (=0) to buffer_max 
                  buffer_max=1, 
                  #the maximal capacity of the buffer#
@@ -155,7 +176,8 @@ class Buffer(object):
                  next_machine_control_action="K"
                  #the control action applied to the machine that is next to the current buffer#
                  ):
-        self.buffer_state=buffer_state
+        self.name=name
+        self.state=state
         self.buffer_max=buffer_max
         self.buffer_min=buffer_min
         self.previous_machine_state=previous_machine_state
@@ -165,7 +187,7 @@ class Buffer(object):
         
     def NextState(self):
         #calculate the state of the buffer at next decision epoch, return this state#
-        nextstate=self.buffer_state
+        nextstate=self.state
         if self.previous_machine_state!="Opr" or self.previous_machine_control_action=="H":
             I_previous=0
         elif self.previous_machine_state=="Opr" and self.previous_machine_control_action=="K":
@@ -177,6 +199,14 @@ class Buffer(object):
         nextstate=nextstate+I_previous-I_next
         return nextstate
 
+    def PrintBuffer(self):
+        #print the status of the current buffer: buffer state, next buffer state#
+        print("Buffer ", self.name, ": ")
+        print("buffer state = ", self.state)
+        print("next buffer state = ", self.NextState())
+        
+        
+        
 """
 the Microgrid class defines variables and functions of the microgrid
 """
@@ -264,27 +294,55 @@ class Microgrid(object):
         #calculate the sold back reward (benefit)#
         return (self.actions_solar[3-1]+self.actions_wind[3-1]+self.actions_generator[3-1])*unit_reward_soldbackenergy
     
+    def PrintMicrogrid(self):
+        #print the current and the next states of the microgrid#
+        print("Microgrid working status = ", self.workingstatus)
+        print("SOC = ", self.SOC)
+        print("the actions of adjusting the working status = ", self.actions_adjustingstatus)
+        print("the solar energy used for supporting [manufaturing, charging battery, sold back] = ", self.actions_solar)
+        print("the wind energy used for supporting [manufacturing, charging battery, sold back] = ", self.actions_wind)
+        print("the use of the energy generated by the generator for supporting [manufacturing, charging battery, sold back] = ", self.actions_generator)
+        print("the use of the energy purchased from the grid for supporting [manufacturing, charging battery] = ", self.actions_purchased)
+        print("the energy discharged by the battery for supporting manufacturing = ", self.actions_discharged)
+        print("the environment feature: solar irradiance at current decision epoch = ", self.solarirradiance)
+        print("the environment feature: wind speed at current decision epoch = ", self.windspeed)
+        print("Microgrid Energy Consunption = ", self.EnergyConsumption())
+        print("Microgrid Operational Cost = ", self.OperationalCost())
+        print("Microgrid SoldBackReward = ", self.SoldBackReward())
+
+
+
 """    
 Combining the above three classes, define the variables and functions for the whole manufacturing system
 """
-
-#class ManufacturingSystem(object):
-    
-    
-    
+class ManufacturingSystem(object):
+    def __init__(self,
+                 machine_states=["Off", "Off", "Brk"],
+                 #set the machine states for all machines in the manufacturing system#
+                 buffer_states=[0,0]
+                 #set the buffer states for all buffers in the manufacturing system#
+                 ):
+        self.machine_states=machine_states
+        self.buffer_states=buffer_states
+        #initialize all machines, ManufacturingSystem.machine=[Machine1, Machine2, ..., Machine_{number_machines}]#
+        self.machine=[]
+        for i in range(number_machines):
+            if i!=number_machines-1:
+                self.machine.append(Machine(name=i+1, state=self.machine_states[i], is_last_machine=False))
+            else:
+                self.machine.append(Machine(name=i+1, state=self.machine_states[i], is_last_machine=True))
+        #initialize all buffers, ManufacturingSystem.buffer=[Buffer1, Buffer2, ..., Buffer_{numbers_machines-1}]
+        self.buffer=[]
+        for j in range(number_machines-1):
+            self.buffer.append(Buffer(name=j+1, state=self.buffer_states[j], previous_machine_state=self.machine[j].state, next_machine_state=self.machine[j+1].state))
     
     
 
     
 if __name__ == "__main__":
-    Machine1=Machine()    
-    print(Machine1.machine_state)
-    print(Machine1.NextState_IsBrk())    
-    Buffer1=Buffer()
-    print(Buffer1.NextState())
-    Microgrid=Microgrid()
-    Microgrid.transition()
-    print(Microgrid.workingstatus)
-    print(Microgrid.EnergyConsumption())
-    print(Microgrid.OperationalCost())
-    print(Microgrid.SoldBackReward())
+    ManufacturingSystem=ManufacturingSystem()
+    for i in range(number_machines):
+        print("i=", i)
+        print(ManufacturingSystem.machine[i].PrintMachine())
+        if i!=number_machines-1:
+            print(ManufacturingSystem.buffer[i].PrintBuffer())
