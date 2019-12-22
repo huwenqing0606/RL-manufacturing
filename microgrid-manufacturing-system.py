@@ -3,7 +3,7 @@ MDP for joint control of microgrid and manufactoring system
 author: Wenqing Hu (Missouri S&T)
 """
 import numpy as np
-
+from random import choice
 
 """
 Set up all parameters that are constant throughout the system
@@ -58,7 +58,7 @@ number_windturbine=10
 #the number of wind turbine in the onsite generation system, N_w#
 unit_reward_soldbackenergy=1
 #the unit reward from sold back energy, r^sb#
-number_machines=3
+number_machines=5
 #the total number of machines in the manufacturing system, total number of buffers=number_machines-1#
 
 
@@ -166,10 +166,10 @@ class Machine(object):
     
     def PrintMachine(self):
         #print the status of the current machine: state, control_action taken, Energy Consumption, throughput, decide whether the next machine state is Brk#
-        print("Machine", self.name, ",", self.state, ",", self.control_action)
-        print(" Energy Consumption = ", self.EnergyConsumption())
+        print("Machine", self.name, "=", self.state, ",", "action=", self.control_action)
+        print(" Energy Consumption=", self.EnergyConsumption())
         if self.is_last_machine:
-            print(" throughtput = ", self.LastMachineProduction())
+            print(" throughput=", self.LastMachineProduction())
         return " "
         
         
@@ -221,11 +221,15 @@ class Buffer(object):
         else:
             I_next=0
         nextstate=nextstate+I_previous-I_next
+        if nextstate>self.buffer_max:
+            nextstate=self.buffer_max
+        if nextstate<self.buffer_min:
+            nextstate=self.buffer_min
         return nextstate
 
     def PrintBuffer(self):
         #print the status of the current buffer: buffer state, next buffer state#
-        print("Buffer", self.name, ",", self.state)
+        print("Buffer", self.name, "=", self.state)
         return " "
         
 """
@@ -338,11 +342,11 @@ Combining the above three classes, define the variables and functions for the wh
 """
 class ManufacturingSystem(object):
     def __init__(self,
-                 machine_states=["Opr", "Opr", "Opr"],
+                 machine_states,
                  #set the machine states for all machines in the manufacturing system#
-                 machine_control_actions=["K", "K", "K"],
+                 machine_control_actions,
                  #set the control actions for all machines in the manufacturing system#
-                 buffer_states=[0,0]
+                 buffer_states
                  #set the buffer states for all buffers in the manufacturing system#
                  ):
         self.machine_states=machine_states
@@ -375,9 +379,10 @@ class ManufacturingSystem(object):
     def transition(self):
         #based on current states and current control actions of the whole manufacturing system, calculate states at the the next decision epoch#
         #states include machine states, buffer states and microgrid states#
+        buffer_states=[]
         for j in range(number_machines-1):
+            buffer_states.append(self.buffer[j].NextState())
         #based on current machine states and control actions taken, calculate the next states of all buffers#    
-            self.buffer[j].state=self.buffer[j].NextState()
         Off=[]
         Brk=[]
         Sta=[]
@@ -424,29 +429,51 @@ class ManufacturingSystem(object):
                             Blo[i]=0
                     else:
                         Blo[i]=0
-        for i in range(number_machines):
         #based on current machine states and control actions taken, calculate the next states of all machines#    
+        machine_states=[]                
+        for i in range(number_machines):
             if Off[i]==1:
-                self.machine[i].state="Off"
+                machine_states.append("Off")
             elif Brk[i]==1:
-                self.machine[i].state="Brk"
+                machine_states.append("Brk")
             elif Sta[i]==1:
-                self.machine[i].state="Sta"
+                machine_states.append("Sta")
             elif Blo[i]==1:
-                self.machine[i].state="Blo"
+                machine_states.append("Blo")
             else: 
-                self.machine[i].state="Opr"
+                machine_states.append("Opr")
+        #return the new states#
+        return machine_states, buffer_states
 
 
     
 if __name__ == "__main__":
-    ManufacturingSystem=ManufacturingSystem()
-    for j in range(3000):
-        print("-----------------Time Step", j, "-----------------")
+    System=ManufacturingSystem(machine_states=["Opr", "Opr", "Off", "Opr", "Opr"],
+                               machine_control_actions=["K", "K", "K", "K", "K"],
+                               buffer_states=[0,0,0,0]
+                               )
+    for j in range(10):
+        print("*********************Time Step", j, "*********************")
         for i in range(number_machines):
             print("--------i=", i, "--------")
-            print(ManufacturingSystem.machine[i].PrintMachine())
+            print(System.machine[i].PrintMachine())
             if i!=number_machines-1:
-                print(ManufacturingSystem.buffer[i].PrintBuffer())
-        ManufacturingSystem.transition()
+                print(System.buffer[i].PrintBuffer())
+        next_machine_states, next_buffer_states=System.transition()
+        actions=[]
+        for i in range(number_machines):
+            if next_machine_states[i]=="Opr":
+                actions.append(choice(["K", "H"]))
+            elif next_machine_states[i]=="Blo":
+                actions.append(choice(["K", "H"]))
+            elif next_machine_states[i]=="Sta":
+                actions.append(choice(["K", "H"]))
+            elif next_machine_states[i]=="Off":
+                actions.append(choice(["K", "W"]))
+            else:
+                actions.append("K")
+        System=ManufacturingSystem(machine_states=next_machine_states, 
+                                   machine_control_actions=actions, 
+                                   buffer_states=next_buffer_states)        
+
         
