@@ -22,6 +22,8 @@ rated_windspeed=1.5
 #the rated windspeed (m/s), v^r#
 charging_discharging_efficiency=1
 #the charging-discharging efficiency, eta#
+rate_consumption_charge=1
+#the rate of consumption charge, r^c#
 unit_operational_cost_solar=1
 #the unit operational and maintanance cost for generating power from solar PV, r_omc^s#
 unit_operational_cost_wind=1
@@ -56,6 +58,8 @@ rated_power_wind_turbine=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radi
 #the rated power of the wind turbine, RP_w#
 number_windturbine=10
 #the number of wind turbine in the onsite generation system, N_w#
+unit_reward_production=1
+#unit reward for each unit of production, r^p#
 unit_reward_soldbackenergy=1
 #the unit reward from sold back energy, r^sb#
 number_machines=5
@@ -270,24 +274,31 @@ class Microgrid(object):
         self.windspeed=windspeed
         
     def transition(self):
+        workingstatus=self.workingstatus
+        SOC=self.SOC
         if self.actions_adjustingstatus[1-1]==1:
-            self.workingstatus[1-1]=1
+            workingstatus[1-1]=1
         else:
-            self.workingstatus[1-1]=0
+            workingstatus[1-1]=0
         #determining the next decision epoch working status of solar PV, 1=working, 0=not working#
         if self.actions_adjustingstatus[2-1]==0 or self.windspeed>cutin_windspeed or self.windspeed<cutoff_windspeed:
-            self.workingstatus[2-1]=0
+            workingstatus[2-1]=0
         else: 
             if self.actions_adjustingstatus[2-1]==1 and self.windspeed<=cutin_windspeed and self.windspeed>=cutoff_windspeed:
-                self.workingstatus[2-1]=1
+                workingstatus[2-1]=1
         #determining the next decision epoch working status of wind turbine, 1=working, 0=not working#        
         if self.actions_adjustingstatus[3-1]==1:
-            self.workingstatus[3-1]=1
+            workingstatus[3-1]=1
         else:
-            self.workingstatus[3-1]=0
+            workingstatus[3-1]=0
         #determining the next decision epoch working status of generator, 1=working, 0=not working#
-        self.SOC=self.SOC+(self.actions_solar[2-1]+self.actions_wind[2-1]+self.actions_generator[2-1]+self.actions_purchased[2-1])*charging_discharging_efficiency-self.actions_discharged/charging_discharging_efficiency
-        #update the SOC, state of charge of the battery system#
+        SOC=self.SOC+(self.actions_solar[2-1]+self.actions_wind[2-1]+self.actions_generator[2-1]+self.actions_purchased[2-1])*charging_discharging_efficiency-self.actions_discharged/charging_discharging_efficiency
+        if SOC>SOC_max:
+            SOC=SOC_max
+        if SOC<SOC_min:
+            SOC=SOC_min
+        #determining the next desicion epoch SOC, state of charge of the battery system#
+        return workingstatus, SOC
     
     def EnergyConsumption(self):
         #returns the energy consumption from the grid#
@@ -346,8 +357,20 @@ class ManufacturingSystem(object):
                  #set the machine states for all machines in the manufacturing system#
                  machine_control_actions,
                  #set the control actions for all machines in the manufacturing system#
-                 buffer_states
+                 buffer_states,
                  #set the buffer states for all buffers in the manufacturing system#
+                 grid=Microgrid(workingstatus=[0,0,0],
+                                SOC=0,
+                                actions_adjustingstatus=[0,1,0],
+                                actions_solar=[0,1,0],
+                                actions_wind=[0,0,1],
+                                actions_generator=[1,0,0],
+                                actions_purchased=[0,0],
+                                actions_discharged=0,
+                                solarirradiance=0,
+                                windspeed=0
+                                )
+                 #set the microgrid states and control actions#
                  ):
         self.machine_states=machine_states
         self.machine_control_actions=machine_control_actions
@@ -375,8 +398,9 @@ class ManufacturingSystem(object):
                                       previous_machine_control_action=self.machine[j].control_action,
                                       next_machine_control_action=self.machine[j+1].control_action
                                       ))
-    
-    def transition(self):
+        self.grid=grid
+        
+    def transition_manufacturing(self):
         #based on current states and current control actions of the whole manufacturing system, calculate states at the the next decision epoch#
         #states include machine states, buffer states and microgrid states#
         buffer_states=[]
@@ -445,12 +469,46 @@ class ManufacturingSystem(object):
         #return the new states#
         return machine_states, buffer_states
 
+    def average_total_cost(self):
+        #calculate the average total cost of the manufacturing system, E(S,A), based on the current machine, buffer, microgrid states and actions#
+        E_mfg=0
+        #total energy consumed by the manufacturing system, summing over all machines#
+        for i in range(number_machines):
+            E_mfg+=self.machine[i].EnergyConsumption
+        #the energy consumption cost#            
+        TF=(E_mfg+self.grid.EnergyConsumption())*rate_consumption_charge
+        #the operational cost for the microgrid system#
+        MC=self.grid.OperationalCost()
+        #the prduction throughput of the manufacturing system#
+        TP=self.machine[number_machines-1].LastMachineProduction()*unit_reward_production
+        #the sold back reward#
+        SB=self.grid.SoldBackReward()
+        return TF+MC-TP-SB
 
-    
+
+
+
+
+"""
+testing on random actions
+"""
+
 if __name__ == "__main__":
+    grid=Microgrid(workingstatus=[0,0,0],
+                   SOC=0,
+                   actions_adjustingstatus=[0,1,0],
+                   actions_solar=[0,1,0],
+                   actions_wind=[0,0,1],
+                   actions_generator=[1,0,0],
+                   actions_purchased=[0,0],
+                   actions_discharged=0,
+                   solarirradiance=0,
+                   windspeed=0
+                   )
     System=ManufacturingSystem(machine_states=["Opr", "Opr", "Off", "Opr", "Opr"],
                                machine_control_actions=["K", "K", "K", "K", "K"],
-                               buffer_states=[0,0,0,0]
+                               buffer_states=[0,0,0,0],
+                               grid=grid
                                )
     for j in range(10):
         print("*********************Time Step", j, "*********************")
@@ -459,7 +517,8 @@ if __name__ == "__main__":
             print(System.machine[i].PrintMachine())
             if i!=number_machines-1:
                 print(System.buffer[i].PrintBuffer())
-        next_machine_states, next_buffer_states=System.transition()
+        print(System.grid.PrintMicrogrid())
+        next_machine_states, next_buffer_states=System.transition_manufacturing()
         actions=[]
         for i in range(number_machines):
             if next_machine_states[i]=="Opr":
@@ -472,8 +531,21 @@ if __name__ == "__main__":
                 actions.append(choice(["K", "W"]))
             else:
                 actions.append("K")
+        workingstatus, SOC=System.grid.transition()
+        grid=Microgrid(workingstatus=workingstatus,
+                       SOC=SOC,
+                       actions_adjustingstatus=[0,1,0],
+                       actions_solar=[0,1,0],
+                       actions_wind=[0,0,1],
+                       actions_generator=[1,0,0],
+                       actions_purchased=[0,0],
+                       actions_discharged=0,
+                       solarirradiance=0,
+                       windspeed=0
+                       )
         System=ManufacturingSystem(machine_states=next_machine_states, 
                                    machine_control_actions=actions, 
-                                   buffer_states=next_buffer_states)        
+                                   buffer_states=next_buffer_states,
+                                   grid=grid)        
 
         
