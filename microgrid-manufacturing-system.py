@@ -474,7 +474,7 @@ class ManufacturingSystem(object):
         E_mfg=0
         #total energy consumed by the manufacturing system, summing over all machines#
         for i in range(number_machines):
-            E_mfg+=self.machine[i].EnergyConsumption
+            E_mfg=E_mfg+self.machine[i].EnergyConsumption()
         #the energy consumption cost#            
         TF=(E_mfg+self.grid.EnergyConsumption())*rate_consumption_charge
         #the operational cost for the microgrid system#
@@ -518,6 +518,7 @@ if __name__ == "__main__":
             if i!=number_machines-1:
                 print(System.buffer[i].PrintBuffer())
         print(System.grid.PrintMicrogrid())
+        print("Average Total Cost=", System.average_total_cost())
         next_machine_states, next_buffer_states=System.transition_manufacturing()
         actions=[]
         for i in range(number_machines):
