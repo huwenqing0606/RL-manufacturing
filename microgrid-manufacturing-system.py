@@ -431,7 +431,7 @@ class ManufacturingSystem(object):
                 if Brk[i]==1 or Off[i]==1:
                     Sta[i]=0
                 else:
-                    if self.buffer[i-1].state==self.buffer[i-1].buffer_min:
+                    if buffer_states[i-1]==self.buffer[i-1].buffer_min:
                         if Brk[i-1]==1 or Sta[i-1]==1 or Off[i-1]==1:
                             Sta[i]=1
                         else:
@@ -446,7 +446,7 @@ class ManufacturingSystem(object):
                 if Brk[i]==1 or Off[i]==1:
                     Blo[i]=0
                 else:
-                    if self.buffer[i].state==self.buffer[i].buffer_max:
+                    if buffer_states[i]==self.buffer[i].buffer_max:
                         if Brk[i+1]==1 or Blo[i+1]==1 or Off[i+1]==1:
                             Blo[i]=1
                         else:
@@ -521,10 +521,9 @@ if __name__ == "__main__":
                                buffer_states=[0,0,0,0],
                                grid=grid
                                )
-    for j in range(1000):
+    for j in range(10):
         print("*********************Time Step", j, "*********************")
         for i in range(number_machines):
-            print("--------i=", i, "--------")
             print(System.machine[i].PrintMachine())
             if i!=number_machines-1:
                 print(System.buffer[i].PrintBuffer())
