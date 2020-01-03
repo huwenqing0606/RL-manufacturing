@@ -4,6 +4,7 @@ author: Wenqing Hu (Missouri S&T)
 """
 import numpy as np
 from random import choice
+from projectionSimplex import projection
 
 """
 Set up all parameters that are constant throughout the system
@@ -66,7 +67,7 @@ unit_reward_production=1
 #unit reward for each unit of production, r^p#
 unit_reward_soldbackenergy=1
 #the unit reward from sold back energy, r^sb#
-number_machines=5
+number_machines=4
 #the total number of machines in the manufacturing system, total number of buffers=number_machines-1#
 
 
@@ -514,9 +515,9 @@ the admissible actions are A_{t+1}=(A^d, A^c, A^r)
 """
 class ActionSimulation(object):
     def __init__(self,
-                 System=ManufacturingSystem(machine_states=["Off", "Off", "Off", "Off", "Off"],
-                                            machine_control_actions=["K", "K", "K", "K", "K"],
-                                            buffer_states=[0,0,0,0],
+                 System=ManufacturingSystem(machine_states=["Off" for _ in range(number_machines)],
+                                            machine_control_actions=["K" for _ in range(number_machines)],
+                                            buffer_states=[0 for _ in range(number_machines-1)],
                                             grid=Microgrid(workingstatus=[0,0,0],
                                                            SOC=0,
                                                            actions_adjustingstatus=[0,0,0],
@@ -661,9 +662,9 @@ if __name__ == "__main__":
                    solarirradiance=0,
                    windspeed=0
                    )
-    System=ManufacturingSystem(machine_states=["Opr", "Opr", "Off", "Opr", "Opr"],
-                               machine_control_actions=["K", "K", "K", "K", "K"],
-                               buffer_states=[0,0,0,0],
+    System=ManufacturingSystem(machine_states=["Off" for _ in range(number_machines)],
+                               machine_control_actions=["K" for _ in range(number_machines)],
+                               buffer_states=[0 for _ in range(number_machines-1)],
                                grid=grid
                                )
     theta=[0,0,0,0,0,0]
@@ -677,14 +678,12 @@ if __name__ == "__main__":
         print(System.grid.PrintMicrogrid())
         print("Average Total Cost=", System.average_total_cost())
         #update the theta#
-        theta_sum=np.random.uniform(0,1,size=None)
-        theta_proportion=np.random.uniform(0,1,size=None)
-        theta=[theta_sum*theta_proportion, theta_sum*(1-theta_proportion), theta_sum*theta_proportion, theta_sum*(1-theta_proportion), theta_sum*theta_proportion, theta_sum*(1-theta_proportion)]
+        theta=projection(np.random.uniform(-1,1,size=6))
         #calculate the next states and actions, S_{t+1}, A_{t+1}#        
         next_machine_states, next_buffer_states=System.transition_manufacturing()
         next_workingstatus, next_SOC=System.grid.transition()
         next_action=ActionSimulation(System=ManufacturingSystem(machine_states=next_machine_states,
-                                                                machine_control_actions=["K", "K", "K", "K", "K"],
+                                                                machine_control_actions=["K" for _ in range(number_machines)],
                                                                 buffer_states=next_buffer_states,
                                                                 grid=Microgrid(workingstatus=next_workingstatus,
                                                                                SOC=next_SOC,
