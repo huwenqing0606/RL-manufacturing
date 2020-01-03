@@ -18,8 +18,10 @@ cutoff_windspeed=2
 #the cut-off windspeed (m/s), v^co#
 rated_windspeed=1
 #the rated windspeed (m/s), v^r#
-charging_discharging_efficiency=1
+charging_discharging_efficiency=0.99
 #the charging-discharging efficiency, eta#
+rate_battery_discharge=1
+#the rate for discharging the battery, b#
 rate_consumption_charge=1
 #the rate of consumption charge, r^c#
 unit_operational_cost_solar=1
@@ -32,9 +34,9 @@ unit_operational_cost_battery=1
 #the unit operational and maintanance cost for battery storage system per unit charging/discharging cycle, r_omc^b#
 capacity_battery_storage=1
 #the capacity of battery storage system, e#
-SOC_max=1000
+SOC_max=10000000
 #the maximum state of charge of battery system#
-SOC_min=1
+SOC_min=0
 #the minimum state of charge of battery system#
 area_solarPV=1
 #the area of the solar PV system, a#
@@ -251,6 +253,8 @@ class Buffer(object):
         #print the status of the current buffer: buffer state, next buffer state#
         print("Buffer", self.name, "=", self.state)
         return " "
+
+
         
 """
 the Microgrid class defines variables and functions of the microgrid
@@ -360,7 +364,7 @@ class Microgrid(object):
         print(" energy discharged by the battery supporting manufacturing=", self.actions_discharged)
         print(" solar irradiance=", self.solarirradiance)
         print(" wind speed=", self.windspeed)
-        print(" Microgrid Energy Consunption=", self.EnergyConsumption())
+        print(" Microgrid Energy Consumption=", self.EnergyConsumption())
         print(" Microgrid Operational Cost=", self.OperationalCost())
         print(" Microgrid SoldBackReward=", self.SoldBackReward())
         return " "
@@ -505,11 +509,12 @@ class ManufacturingSystem(object):
 
 
 """
-Simulate admissible actions based on the current state of the system, the admissible actions contain (A^d, A^c, A^r)
+Simulate admissible actions based on the current state S_{t+1} of the manufacturing system, 
+the admissible actions are A_{t+1}=(A^d, A^c, A^r)
 """
-class AdmissibleActionSimulation(object):
+class ActionSimulation(object):
     def __init__(self,
-                 System=ManufacturingSystem(machine_states=["Opr", "Opr", "Off", "Opr", "Opr"],
+                 System=ManufacturingSystem(machine_states=["Off", "Off", "Off", "Off", "Off"],
                                             machine_control_actions=["K", "K", "K", "K", "K"],
                                             buffer_states=[0,0,0,0],
                                             grid=Microgrid(workingstatus=[0,0,0],
@@ -522,11 +527,12 @@ class AdmissibleActionSimulation(object):
                                                            actions_discharged=0,
                                                            solarirradiance=0,
                                                            windspeed=0
-                                                           ))
-                 ):
-                     #Set the grid and the ManufacturingSystem#
-                     self.System=System
-                 
+                                                           )),
+                 theta=[0,0,0,0,0,0]):
+        #the ManufacturingSystem is with new states S_{t+1} but old actions A_{t}, we obtain the admissible A_{t+1} in this class#
+        self.System=System
+        #theta is the proportionality parameters theta=[lambda_s^m, lambda_s^b, lambda_w^m, lambda_w^b, lambda_g^m, lambda_g^]#
+        self.theta=theta         
     
     def MachineActions(self):
         #Based on current machine states in the system, randomly uniformly simulate an admissible action for all machines#
@@ -553,27 +559,77 @@ class AdmissibleActionSimulation(object):
     
     def MicroGridActions_SolarWindGenerator(self):
         #update the parameter theta for [solar, wind, generator] actions (proportionality distributed) according to deterministic policy gradient theorm#
-        actions_solar=[0.3,0.3,0.4]
-        actions_wind=[0.3,0.3,0.4]
-        actions_generator=[0.3,0.3,0.4]
+        actions_mpSum=np.random.random(size=None)
+        actions_m=np.random.random(size=None)*actions_mpSum
+        actions_solar=[actions_m, actions_mpSum-actions_m, 1-actions_mpSum]
+        actions_wind=[actions_m, actions_mpSum-actions_m, 1-actions_mpSum]
+        actions_generator=[actions_m, actions_mpSum-actions_m, 1-actions_mpSum]
         return actions_solar, actions_wind, actions_generator
     
-    def MicroGridActions_PurchasedDischarged(self):
+    def MicroGridActions_PurchasedDischarged(self, 
+                                             actions_solar=[0,0,0],
+                                             actions_wind=[0,0,0],
+                                             actions_generator=[0,0,0]):
         #randomly simulate an action that determines the use of the purchased energy and the energy discharge#
-        actions_solar, actions_wind, actions_generator=self.MicroGridActions_SolarWindGenerator()
-        #simulate the solar, wind and generator actions for energy distribution#
+        #actions_solar, actions_wind, actions_generator are the actions to be taken at current system states#
         TotalSoldBack=actions_solar[3-1]+actions_wind[3-1]+actions_generator[3-1]
         #Total amount of sold back energy#
         TotalBattery=actions_solar[2-1]+actions_wind[2-1]+actions_generator[2-1]
         #Total amount if energy charged to the battery#
+        SOC_Condition=self.System.grid.SOC-rate_battery_discharge*Delta_t/charging_discharging_efficiency-SOC_min
+        #The condition for SOC at the current system state#
         E_mfg=0
-        #total energy consumed by the manufacturing system, summing over all machines#
         for i in range(number_machines):
             E_mfg=E_mfg+self.System.machine[i].EnergyConsumption()
-        EnergyConsumedFromGrid=E_mfg+self.System.grid.EnergyConsumption()
-        
-        
-        
+        #total energy consumed by the manufacturing system, summing over all machines#
+        p_hat=E_mfg-(actions_solar[1-1]+actions_wind[1-1]+actions_generator[1-1])
+        if p_hat<0:
+            p_hat=0
+        #Set the p_hat#
+        p_tilde=E_mfg-(actions_solar[1-1]+actions_wind[1-1]+actions_generator[1-1]+rate_battery_discharge*Delta_t)
+        if p_tilde<0:
+            p_tilde=0
+        #Set the p_tilde#
+        ####Calculate actions_purchased and actions_discharged according to the table in the paper####
+        actions_purchased=[0,0]
+        actions_discharged=0
+        if TotalSoldBack>0 and TotalBattery>0 and SOC_Condition>0:
+            actions_purchased=[0,0]
+            actions_discharged=0
+        elif TotalSoldBack>0 and TotalBattery>0 and SOC_Condition<=0:
+            actions_purchased=[0,0]
+            actions_discharged=0
+        elif TotalSoldBack>0 and TotalBattery<=0 and SOC_Condition>0:
+            actions_purchased=[0,0]
+            actions_discharged=choice([0, rate_battery_discharge*Delta_t])
+        elif TotalSoldBack>0 and TotalBattery<=0 and SOC_Condition<=0:
+            actions_purchased=[0,0]
+            actions_discharged=0
+        elif TotalSoldBack<=0 and TotalBattery>0 and SOC_Condition>0:
+            actions_purchased[2-1]=choice([0, p_hat])
+            actions_purchased[1-1]=p_hat-actions_purchased[2-1]
+            actions_discharged=0
+        elif TotalSoldBack<=0 and TotalBattery>0 and SOC_Condition<=0:
+            actions_purchased[2-1]=choice([0, p_hat])
+            actions_purchased[1-1]=p_hat-actions_purchased[2-1]
+            actions_discharged=0
+        elif TotalSoldBack<=0 and TotalBattery<=0 and SOC_Condition>0:
+            actions_discharged=choice([0, rate_battery_discharge*Delta_t])
+            if actions_discharged==0:
+                actions_purchased[2-1]=choice([0, p_hat])
+                actions_purchased[1-1]=p_hat-actions_purchased[2-1]
+            else:
+                actions_purchased[2-1]=0
+                actions_purchased[1-1]=p_tilde
+        else:
+            actions_purchased[2-1]=choice([0, p_hat])
+            actions_purchased[1-1]=p_hat-actions_purchased[2-1]
+            actions_discharged=0
+            
+        return actions_purchased, actions_discharged
+            
+
+
 """
 testing on random admissible actions
 """
@@ -594,7 +650,7 @@ if __name__ == "__main__":
                                buffer_states=[0,0,0,0],
                                grid=grid
                                )
-    for j in range(10):
+    for j in range(1000):
         print("*********************Time Step", j, "*********************")
         for i in range(number_machines):
             print(System.machine[i].PrintMachine())
@@ -603,35 +659,43 @@ if __name__ == "__main__":
         print(System.grid.PrintMicrogrid())
         print("Average Total Cost=", System.average_total_cost())
         next_machine_states, next_buffer_states=System.transition_manufacturing()
-        actions=[]
-        for i in range(number_machines):
-            if next_machine_states[i]=="Opr":
-                actions.append(choice(["K", "H"]))
-            elif next_machine_states[i]=="Blo":
-                actions.append(choice(["K", "H"]))
-            elif next_machine_states[i]=="Sta":
-                actions.append(choice(["K", "H"]))
-            elif next_machine_states[i]=="Off":
-                actions.append(choice(["K", "W"]))
-            else:
-                actions.append("K")
-        workingstatus, SOC=System.grid.transition()
-        actions_adjustingstatus=[]
-        for i in range(3):
-            actions_adjustingstatus.append(choice([0,1]))
-        grid=Microgrid(workingstatus=workingstatus,
-                       SOC=SOC,
-                       actions_adjustingstatus=actions_adjustingstatus,
-                       actions_solar=[0,0,0],
-                       actions_wind=[0,0,0],
-                       actions_generator=[0,0,0],
-                       actions_purchased=[0,0],
-                       actions_discharged=0,
+        next_workingstatus, next_SOC=System.grid.transition()
+        next_action=ActionSimulation(System=ManufacturingSystem(machine_states=next_machine_states,
+                                                                machine_control_actions=["K", "K", "K", "K", "K"],
+                                                                buffer_states=next_buffer_states,
+                                                                grid=Microgrid(workingstatus=next_workingstatus,
+                                                                               SOC=next_SOC,
+                                                                               actions_adjustingstatus=[0,0,0],
+                                                                               actions_solar=[0,0,0],
+                                                                               actions_wind=[0,0,0],
+                                                                               actions_generator=[0,0,0],
+                                                                               actions_purchased=[0,0],
+                                                                               actions_discharged=0,
+                                                                               solarirradiance=solarirradiance[j//8640],
+                                                                               windspeed=windspeed[j//8640],
+                                                                               )
+                                                                )
+                                    )
+        next_actions_adjustingstatus=next_action.MicroGridActions_adjustingstatus()
+        next_actions_solar, next_actions_wind, next_actions_generator=next_action.MicroGridActions_SolarWindGenerator()
+        next_actions_purchased, next_actions_discharged=next_action.MicroGridActions_PurchasedDischarged(next_actions_solar,
+                                                                                                         next_actions_wind,
+                                                                                                         next_actions_generator)
+        next_machine_control_actions=next_action.MachineActions()
+        grid=Microgrid(workingstatus=next_workingstatus,
+                       SOC=next_SOC,
+                       actions_adjustingstatus=next_actions_adjustingstatus,
+                       actions_solar=next_actions_solar,
+                       actions_wind=next_actions_wind,
+                       actions_generator=next_actions_generator,
+                       actions_purchased=next_actions_purchased,
+                       actions_discharged=next_actions_discharged,
                        solarirradiance=solarirradiance[j//8640],
                        windspeed=windspeed[j//8640]
                        )
         System=ManufacturingSystem(machine_states=next_machine_states, 
-                                   machine_control_actions=actions, 
+                                   machine_control_actions=next_machine_control_actions, 
                                    buffer_states=next_buffer_states,
-                                   grid=grid)        
+                                   grid=grid
+                                   )        
 
