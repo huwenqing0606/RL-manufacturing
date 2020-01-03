@@ -70,7 +70,6 @@ unit_reward_soldbackenergy=1
 number_machines=4
 #the total number of machines in the manufacturing system, total number of buffers=number_machines-1#
 
-
 import pandas as pd
 #read the solar irradiance and wind speed data from file#
 file_SolarIrradiance = "SolarIrradiance.csv"
@@ -371,6 +370,7 @@ class Microgrid(object):
         return " "
 
 
+
 """    
 Combining the above three classes, define the variables and functions for the whole manufacturing system
 """
@@ -509,6 +509,7 @@ class ManufacturingSystem(object):
         return TF+MC-TP-SB
 
 
+
 """
 Simulate admissible actions based on the current state S_{t+1} of the manufacturing system, 
 the admissible actions are A_{t+1}=(A^d, A^c, A^r)
@@ -528,12 +529,10 @@ class ActionSimulation(object):
                                                            actions_discharged=0,
                                                            solarirradiance=0,
                                                            windspeed=0
-                                                           )),
-                 theta=[0,0,0,0,0,0]):
+                                                           ))
+                 ):
         #the ManufacturingSystem is with new states S_{t+1} but old actions A_{t}, we obtain the admissible A_{t+1} in this class#
         self.System=System
-        #theta is the proportionality parameters theta=[lambda_s^m, lambda_s^b, lambda_w^m, lambda_w^b, lambda_g^m, lambda_g^]#
-        self.theta=theta         
     
     def MachineActions(self):
         #Based on current machine states in the system, randomly uniformly simulate an admissible action for all machines#
@@ -560,6 +559,7 @@ class ActionSimulation(object):
     
     def MicroGridActions_SolarWindGenerator(self, theta):
         #from the updated proportionality parameter theta return the corresponding actions on solar, wind and generator#
+        #theta is the proportionality parameters theta=[lambda_s^m, lambda_s^b, lambda_w^m, lambda_w^b, lambda_g^m, lambda_g^]#
         if self.System.grid.workingstatus[1-1]==1:
             energy_generated_solar=self.System.grid.solarirradiance*area_solarPV*efficiency_solarPV/1000
         else:
@@ -642,7 +642,7 @@ class ActionSimulation(object):
             actions_purchased[2-1]=choice([0, p_hat])
             actions_purchased[1-1]=p_hat-actions_purchased[2-1]
             actions_discharged=0
-            
+        #return actions_purchased and actions_discharged#
         return actions_purchased, actions_discharged
             
 
