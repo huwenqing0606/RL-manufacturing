@@ -6,6 +6,7 @@ Created on Fri Jan  3 14:33:36 2020
 
 Title: Reinforcement Learning for the joint control of onsite microgrid and manufacturing system
 """
+output = open('output.txt', 'w') 
 
 from microgrid_manufacturing_system import Microgrid, ManufacturingSystem, ActionSimulation
 from projectionSimplex import projection
@@ -27,7 +28,7 @@ windspeed = np.array(data_wind.iloc[:,3])
 
 
 #the learning rates for the theta and omega iterations#
-lr_theta=0.001
+lr_theta=0.01
 lr_omega=0.001
 
 #the discount factor gamma when calculating the total cost#
@@ -217,7 +218,15 @@ if __name__ == "__main__":
                                buffer_states=[0 for _ in range(number_machines-1)],
                                grid=grid
                                )
-    theta=[0.5,0.5,0.5,0.5,0.5,0.5]
+    
+    #randomly generate an initial theta and plot the bounday of the simplex where theta moves#
+    r=np.random.uniform(0,1,size=6)
+    theta=[r[0]*r[1], r[0]*(1-r[1]), r[2]*r[3], r[2]*(1-r[3]), r[4]*r[5], r[4]*(1-r[5])] 
+    x = [[0, 0], [0, 1], [1, 0]] 
+    y = [[0, 1], [1, 0], [0, 0]]
+    for i in range(len(x)): 
+        plt.plot(x[i], y[i], color='g')
+    
     omega=[ [0 for _ in range(number_machines)], 
             [0 for _ in range(number_machines-1)], 
             [0 for _ in range(3)],
@@ -227,34 +236,53 @@ if __name__ == "__main__":
             [0 for _ in range(2)],
             0 ] 
     Q=[]
+
     for t in range(1000):
         #current states and actions S_t and A_t are stored in class System#
-        print("*********************Time Step", t, "*********************")
+        print("*********************Time Step", t, "*********************", file=output)
         for i in range(number_machines):
-            print(System.machine[i].PrintMachine())
+            print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action, file=output)
+            print(" Energy Consumption=", System.machine[i].EnergyConsumption(), file=output)
+            if System.machine[i].is_last_machine:
+                print(" ", file=output)
+                print(" throughput=", System.machine[i].LastMachineProduction(), file=output)
+            print(" ", file=output)
             if i!=number_machines-1:
-                print(System.buffer[i].PrintBuffer())
-        print(System.grid.PrintMicrogrid())
+                print("Buffer", System.buffer[i].name, "=", System.buffer[i].state, file=output)
+        print("Microgrid working status [solar PV, wind turbine, generator]=", System.grid.workingstatus, ", SOC=", System.grid.SOC, file=output)
+        print(" microgrid actions [solar PV, wind turbine, generator]=", System.grid.actions_adjustingstatus, file=output)
+        print(" solar energy supporting [manufaturing, charging battery, sold back]=", System.grid.actions_solar, file=output)
+        print(" wind energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_wind, file=output)
+        print(" generator energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_generator, file=output)
+        print(" energy purchased from grid supporting [manufacturing, charging battery]=", System.grid.actions_purchased, file=output)
+        print(" energy discharged by the battery supporting manufacturing=", System.grid.actions_discharged, file=output)
+        print(" solar irradiance=", System.grid.solarirradiance, file=output)
+        print(" wind speed=", System.grid.windspeed, file=output)
+        print(" Microgrid Energy Consumption=", System.grid.EnergyConsumption(), file=output)
+        print(" Microgrid Operational Cost=", System.grid.OperationalCost(), file=output)
+        print(" Microgrid SoldBackReward=", System.grid.SoldBackReward(), file=output)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
         E=System.average_total_cost()
-        print("Average Total Cost=", E)
+        print(" ", file=output)
+        print("Average Total Cost=", E, file=output)
         #calculate the old Q-value and its gradient wrt omega: Q(S_t, A_t; omega_t) and grad_omega Q(S_t, A_t; omega_t)#
         av=action_value(System, omega)
         num_list_SA=av.num_list_States_Actions()
-        print("states and actions in numerical list=", num_list_SA)
+        print("states and actions in numerical list=", np.array(num_list_SA), file=output)
         Q_old=av.Q(num_list_SA)
         Q_grad_omega_old=av.Q_grad_omega(num_list_SA)
-        print("Q=", Q_old)
+        print("Q=", Q_old, file=output)
         Q.append(Q_old)
         #update the theta using deterministic policy gradient#
         upd_tht=update_theta(System, theta)
-        print("A_c_grad_theta=", upd_tht.A_c_gradient_theta())
-        print("Q_grad_A_c=", av.Q_grad_A_c())
-        print("learning rate theta=", lr_theta)
+        print("A_c_grad_theta=", " ", file=output)
+        print(upd_tht.A_c_gradient_theta(), file=output)
+        print("Q_grad_A_c=", av.Q_grad_A_c(), file=output)
+        print("learning rate theta=", lr_theta, file=output)
         policy_grad=upd_tht.deterministic_policygradient(upd_tht.A_c_gradient_theta(), av.Q_grad_A_c())
-        print("policy gradient=", policy_grad)
+        print("policy gradient=", policy_grad, file=output)
         theta=upd_tht.update(policy_grad, lr_theta)
-        print("new theta=", theta)
+        print("new theta=", theta, file=output)
         #calculate the next states and actions: S_{t+1}, A_{t+1}#        
         next_machine_states, next_buffer_states=System.transition_manufacturing()
         next_workingstatus, next_SOC=System.grid.transition()
@@ -302,12 +330,12 @@ if __name__ == "__main__":
         num_list_SA=av.num_list_States_Actions()
         Q_new=av.Q(num_list_SA)
         TD=E+gamma*Q_new-Q_old
-        print("TD=", TD)
+        print("TD=", TD, file=output)
         #update omega using actor-critique#
-        print("Q_grad_omega=", Q_grad_omega_old)
+        print("Q_grad_omega=", Q_grad_omega_old, file=output)
         factor=lr_omega*TD
-        print("lr_omega*TD=", factor)
-        print("omega=", omega)
+        print("lr_omega*TD=", factor, file=output)
+        print("omega=", np.array(omega), file=output)
         for i in range(number_machines):
             omega[1-1][i]=omega[1-1][i]-factor*Q_grad_omega_old[1-1][i]
         for i in range(number_machines-1):
@@ -327,9 +355,20 @@ if __name__ == "__main__":
         omega[8-1]=omega[8-1]-factor*Q_grad_omega_old[8-1]
         
         #discount the learning rate#
-        lr_theta=lr_theta*0.99
+        lr_theta=lr_theta*1
         lr_omega=lr_omega*0.99
         
+        print(" ", file=output)
+        
+        #plot the theta values#
+        plt.scatter(theta[0], theta[1], color='b')
+        plt.scatter(theta[2], theta[3], marker='+', color='m')
+        plt.scatter(theta[4], theta[5], marker='*', color='r')
+
+    plt.show()   
     
+    #plot the Q values#
     plt.plot(Q)
     plt.show()   
+    
+output.close() 
