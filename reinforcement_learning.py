@@ -27,16 +27,17 @@ windspeed = np.array(data_wind.iloc[:,3])
 
 
 #the learning rates for the theta and omega iterations#
-lr_theta=0.01
-lr_omega=0.01
+lr_theta=0.001
+lr_omega=0.001
 
-#the discount factor gamma#
-gamma=0.1
+#the discount factor gamma when calculating the total cost#
+gamma=0.01
 
 
 """
-Provide the structure of the action-value function Q(A^d, A^c, A^r; omega), 
-also provide its gradients tensor with respect to A^c and to omega
+Provide the structure of the action-value function Q(S, A^d, A^c, A^r; omega), 
+also provide its gradients with respect to A^c and to omega
+Here we assume that Q is linear in omega: Q(S, A^d, A^c, A^r; omega)=S omega_S+A^d omega_{A^d}+A^c omega_{A^c}+A^r omega_{A^r}
 """ 
 class action_value(object):
     def __init__(self,
@@ -70,8 +71,8 @@ class action_value(object):
         
     def num_list_States_Actions(self):
         #return the states and actions as a numerical list#
-        #"Off"=1, "Brk"=2, "Idl"=3, "Blk"=4, "Opr"=5#
-        #"H"=1, "K"=2, "W"=3#
+        #"Off"=0, "Brk"=-2, "Idl"=-1, "Blk"=1, "Opr"=2#
+        #"H"=-1, "K"=0, "W"=1#
         list=[  [0 for _ in range(number_machines)], 
                 [0 for _ in range(number_machines-1)], 
                 [0 for _ in range(3)],
@@ -82,26 +83,26 @@ class action_value(object):
                 0 ]
         for i in range(number_machines):
             if self.System.machine_states[i]=="Off":
-                list[1-1][i]=1
+                list[1-1][i]=0
             elif self.System.machine_states[i]=="Brk":
-                list[1-1][i]=2
+                list[1-1][i]=-2
             elif self.System.machine_states[i]=="Idl":
-                list[1-1][i]=3
+                list[1-1][i]=-1
             elif self.System.machine_states[i]=="Blo":
-                list[1-1][i]=4
+                list[1-1][i]=1
             else:
-                list[1-1][i]=5
+                list[1-1][i]=2
         for i in range(number_machines-1):
             list[2-1][i]=self.System.buffer_states[i]
         for i in range(3):
             list[3-1][i]=self.System.grid.workingstatus[i]
         for i in range(number_machines):
             if self.System.machine_control_actions[i]=="H":
-                list[4-1][i]=1
+                list[4-1][i]=-1
             elif self.System.machine_control_actions[i]=="K":
-                list[4-1][i]=2
+                list[4-1][i]=0
             else:
-                list[4-1][i]=3
+                list[4-1][i]=1
         for i in range(3):
             list[5-1][i]=self.System.grid.actions_adjustingstatus[i]
         for i in range(3):
@@ -115,18 +116,21 @@ class action_value(object):
         
     
     def Q(self, num_list_States_Actions):
+        #calculate the Q-value#
         Q=0
         for i in range(8):
             Q=Q+np.dot(np.array(self.omega[i]), np.array(num_list_States_Actions[i]))    
         return Q
     
     def Q_grad_A_c(self):
+        #calculate the gradient of Q with respect to A^c#
         grad=[]
         for i in range(9):
             grad.append(self.omega[6-1][i])
         return np.array(grad)
 
     def Q_grad_omega(self, num_list_States_Actions):
+        #calculate the gradient of Q with respect to omega#
         return num_list_States_Actions
 
 
@@ -180,10 +184,11 @@ class update_theta(object):
         
     def deterministic_policygradient(self, A_c_grad_theta, Q_grad_A_c):
         #output the deterministic policy gradient of the cost with respect to the theta#
-        policygradient=np.dot(Q_grad_A_c,A_c_grad_theta)
+        policygradient=np.dot(Q_grad_A_c, A_c_grad_theta)
         return policygradient
 
     def update(self, policygradient, lr_theta):
+        #deterministic policy gradient on theta#
         theta_old=self.theta
         theta_new=projection(theta_old-lr_theta*policygradient)                           
         return theta_new
@@ -212,7 +217,7 @@ if __name__ == "__main__":
                                buffer_states=[0 for _ in range(number_machines-1)],
                                grid=grid
                                )
-    theta=[0,0,0,0,0,0]
+    theta=[0.5,0.5,0.5,0.5,0.5,0.5]
     omega=[ [0 for _ in range(number_machines)], 
             [0 for _ in range(number_machines-1)], 
             [0 for _ in range(3)],
@@ -230,21 +235,26 @@ if __name__ == "__main__":
             if i!=number_machines-1:
                 print(System.buffer[i].PrintBuffer())
         print(System.grid.PrintMicrogrid())
-        print("Average Total Cost=", System.average_total_cost())
+        #calculate the total cost at S_t, A_t: E(S_t, A_t)#
+        E=System.average_total_cost()
+        print("Average Total Cost=", E)
         #calculate the old Q-value and its gradient wrt omega: Q(S_t, A_t; omega_t) and grad_omega Q(S_t, A_t; omega_t)#
         av=action_value(System, omega)
         num_list_SA=av.num_list_States_Actions()
+        print("states and actions in numerical list=", num_list_SA)
         Q_old=av.Q(num_list_SA)
         Q_grad_omega_old=av.Q_grad_omega(num_list_SA)
         print("Q=", Q_old)
-        print(" ")
         Q.append(Q_old)
-        #Calculate the total cost at S_t, A_t: E(S_t, A_t)#
-        E=System.average_total_cost()
         #update the theta using deterministic policy gradient#
-        update_tht=update_theta(System, theta)
-        policy_grad=update_tht.deterministic_policygradient(update_tht.A_c_gradient_theta(), av.Q_grad_A_c())
-        theta=update_tht.update(policy_grad, lr_theta)
+        upd_tht=update_theta(System, theta)
+        print("A_c_grad_theta=", upd_tht.A_c_gradient_theta())
+        print("Q_grad_A_c=", av.Q_grad_A_c())
+        print("learning rate theta=", lr_theta)
+        policy_grad=upd_tht.deterministic_policygradient(upd_tht.A_c_gradient_theta(), av.Q_grad_A_c())
+        print("policy gradient=", policy_grad)
+        theta=upd_tht.update(policy_grad, lr_theta)
+        print("new theta=", theta)
         #calculate the next states and actions: S_{t+1}, A_{t+1}#        
         next_machine_states, next_buffer_states=System.transition_manufacturing()
         next_workingstatus, next_SOC=System.grid.transition()
@@ -294,7 +304,10 @@ if __name__ == "__main__":
         TD=E+gamma*Q_new-Q_old
         print("TD=", TD)
         #update omega using actor-critique#
+        print("Q_grad_omega=", Q_grad_omega_old)
         factor=lr_omega*TD
+        print("lr_omega*TD=", factor)
+        print("omega=", omega)
         for i in range(number_machines):
             omega[1-1][i]=omega[1-1][i]-factor*Q_grad_omega_old[1-1][i]
         for i in range(number_machines-1):
@@ -313,7 +326,7 @@ if __name__ == "__main__":
             omega[7-1][i]=omega[7-1][i]-factor*Q_grad_omega_old[7-1][i]
         omega[8-1]=omega[8-1]-factor*Q_grad_omega_old[8-1]
         
-        
+        #discount the learning rate#
         lr_theta=lr_theta*0.99
         lr_omega=lr_omega*0.99
         
