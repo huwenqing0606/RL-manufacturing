@@ -2,7 +2,7 @@
 """
 Created on Fri Jan  3 14:33:36 2020
 
-@author: huwenqing
+@author: Wenqing Hu and Louis Steinmeister
 
 Title: Reinforcement Learning for the joint control of onsite microgrid and manufacturing system
 """
