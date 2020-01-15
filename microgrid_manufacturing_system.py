@@ -166,7 +166,7 @@ class Machine(object):
         #Based on the current state of the machine, determine if the state of the machine at next decision epoch is "Brk"#
         #If is "Brk" return True otherwise return False#
         #When return False, the next state lies in the set {"Opr", "Sta", "Blo", "Off"}#
-        L=np.random.weibull(self.lifetime_shape_parameter, self.lifetime_scale_parameter)
+        L=self.lifetime_scale_parameter*np.random.weibull(self.lifetime_shape_parameter,1)
         #the random variable L is the lifetime#
         D=np.random.exponential(1/self.repairtime_mean)
         #the random variable D is the repair time# 
