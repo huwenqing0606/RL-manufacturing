@@ -9,66 +9,69 @@ from projectionSimplex import projection
 """
 Set up all parameters that are constant throughout the system
 """
-Delta_t=1 
-#the actual time measured in one decision epoch unit#
-unit_reward_production=1
-#the unit reward for each unit of production, i.e. the r^p, this applies to the end of the machine sequence
-cutin_windspeed=0
+Delta_t=1
+#the actual time measured in one decision epoch unit, in hours#
+unit_reward_production=5/100
+#the unit reward for each unit of production, i.e. the r^p, this applies to the end of the machine sequence#
+cutin_windspeed=3/100
 #the cut-in windspeed (m/s), v^ci#
-cutoff_windspeed=1000000
+cutoff_windspeed=11/100
 #the cut-off windspeed (m/s), v^co#
-rated_windspeed=1
+rated_windspeed=7/100
 #the rated windspeed (m/s), v^r#
-charging_discharging_efficiency=0.99
+charging_discharging_efficiency=0.95/100
 #the charging-discharging efficiency, eta#
-rate_battery_discharge=1
+rate_battery_discharge=2/100
 #the rate for discharging the battery, b#
-rate_consumption_charge=1
+rate_consumption_charge=0.25/100
 #the rate of consumption charge, r^c#
-unit_operational_cost_solar=1
+unit_operational_cost_solar=0.17/100
 #the unit operational and maintanance cost for generating power from solar PV, r_omc^s#
-unit_operational_cost_wind=1
+unit_operational_cost_wind=0.08/100
 #the unit operational and maintanance cost for generating power from wind turbine, r_omc^w#
-unit_operational_cost_generator=1
+unit_operational_cost_generator=0.45/100
 #the unit opeartional and maintanance cost for generating power from generator, r_omc^g#
-unit_operational_cost_battery=1
+unit_operational_cost_battery=0.9/100
 #the unit operational and maintanance cost for battery storage system per unit charging/discharging cycle, r_omc^b#
-capacity_battery_storage=1
+capacity_battery_storage=20/100
 #the capacity of battery storage system, e#
-SOC_max=10000000
+SOC_max=0.95*2.71828*100000000000
 #the maximum state of charge of battery system#
-SOC_min=0
+SOC_min=0.05*2.71828/100
 #the minimum state of charge of battery system#
-area_solarPV=1
+area_solarPV=14000/100
 #the area of the solar PV system, a#
-efficiency_solarPV=1
+efficiency_solarPV=0.2/100
 #the efficiency of the solar PV system, delta#
-density_of_air=1
+density_of_air=1.225/100
 #calculate the rated power of the wind turbine, density of air, rho#
-radius_wind_turbine_blade=1
+radius_wind_turbine_blade=25/100
 #calculate the rated power of the wind turbine, radius of the wind turbine blade, r#
-average_wind_speed=1
+average_wind_speed=0.25/100
 #calculate the rated power of the wind turbine, average wind speed, v_avg#
-power_coefficient=1
+power_coefficient=0.593/100
 #calculate the rated power of the wind turbine, power coefficient, theta#
-gearbox_transmission_efficiency=1
+gearbox_transmission_efficiency=0.9/100
 #calculate the rated power of the wind turbine, gearbox transmission efficiency, eta_t#
-electrical_generator_efficiency=1
+electrical_generator_efficiency=0.9/100
 #calculate the rated power of the wind turbine, electrical generator efficiency, eta_g#
-rated_power_wind_turbine=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radius_wind_turbine_blade*average_wind_speed*average_wind_speed*average_wind_speed*power_coefficient*gearbox_transmission_efficiency*electrical_generator_efficiency/1000
+rated_power_wind_turbine=878.1101/100
+#rated_power_wind_turbine=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radius_wind_turbine_blade*average_wind_speed*average_wind_speed*average_wind_speed*power_coefficient*gearbox_transmission_efficiency*electrical_generator_efficiency/1000
 #the rated power of the wind turbine, RP_w#
-number_windturbine=10
+number_windturbine=1/100
 #the number of wind turbine in the onsite generation system, N_w#
-number_generators=10
+number_generators=1/100
 #the number of generators, n_g#
-rated_output_power_generator=1
+rated_output_power_generator=650/100
 #the rated output power of the generator, G_p#
-unit_reward_production=1
+unit_reward_production=5/100
 #unit reward for each unit of production, r^p#
-unit_reward_soldbackenergy=1
+unit_reward_soldbackenergy=0.2/100
 #the unit reward from sold back energy, r^sb#
 number_machines=5
 #the total number of machines in the manufacturing system, total number of buffers=number_machines-1#
+
+
 
 import pandas as pd
 #read the solar irradiance and wind speed data from file#
@@ -93,15 +96,15 @@ class Machine(object):
     def __init__(self,
                  name=1,
                  #the label of this machine#
-                 lifetime_shape_parameter=1, 
+                 lifetime_shape_parameter=1.5, 
                  #random lifetime of machine follows Weibull distribution with shape parameter lifetime_shape_parameter
-                 lifetime_scale_parameter=1,
+                 lifetime_scale_parameter=100/60,
                  #random lifetime of machine follows Weibull distribution with scale parameter lifetime_scale_parameter
-                 repairtime_mean=1,
+                 repairtime_mean=15/60,
                  #random repair time of machine follows exponential distribution with mean repairtime_mean
-                 power_consumption_Opr=1,
+                 power_consumption_Opr=115/100,
                  #amount of power drawn by the machine if the machine state is Opr (Operating)
-                 power_consumption_Idl=1,
+                 power_consumption_Idl=105/100,
                  #amount of power drawn by the machine if the machine state is Sta (Starvation) or Blo (Blockage), both are Idl (Idle) states
                  state="OFF",
                  #machine state can be "Opr" (Operating), "Blo" (Blockage), "Sta" (Starvation), "Off", "Brk" (Break)
@@ -166,7 +169,7 @@ class Machine(object):
         #Based on the current state of the machine, determine if the state of the machine at next decision epoch is "Brk"#
         #If is "Brk" return True otherwise return False#
         #When return False, the next state lies in the set {"Opr", "Sta", "Blo", "Off"}#
-        L=np.random.weibull(self.lifetime_shape_parameter, self.lifetime_scale_parameter)
+        L=self.lifetime_scale_parameter*np.random.weibull(self.lifetime_shape_parameter, 1)
         #the random variable L is the lifetime#
         D=np.random.exponential(1/self.repairtime_mean)
         #the random variable D is the repair time# 
@@ -205,7 +208,7 @@ class Buffer(object):
                  #the label of this buffer#
                  state=0,
                  #the buffer state is an integer from buffer_min (=0) to buffer_max 
-                 buffer_max=1, 
+                 buffer_max=4, 
                  #the maximal capacity of the buffer#
                  buffer_min=0,
                  #the minimal capacity of the buffer is zero#
