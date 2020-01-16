@@ -2,7 +2,7 @@
 """
 Created on Fri Jan  3 14:33:36 2020
 
-@author: Wenqing Hu and Louis Steinmeister
+@author: Wenqing Hu and Louis Steimeister
 
 Title: Reinforcement Learning for the joint control of onsite microgrid and manufacturing system
 """
@@ -37,7 +37,7 @@ lr_theta=0.003
 lr_omega=0.0003
 
 #the discount factor gamma when calculating the total cost#
-gamma=0.001
+gamma=0.99
 
 
 """
@@ -311,6 +311,9 @@ if __name__ == "__main__":
     my_critic = critic()
     omega = []
     Q=[]
+    TemporalDifference=[]
+    rewardseq=[]
+    reward=0
 
     for t in range(4000):
         #current states and actions S_t and A_t are stored in class System#
@@ -406,6 +409,11 @@ if __name__ == "__main__":
         Q_new=av.Q(num_list_SA)
         TD=E+gamma*Q_new-Q_old
         print("TD=", TD, file=output)
+        TemporalDifference.append(TD)
+        #calculate the up-to-date reward#
+        reward=reward+np.power(gamma, t)*E
+        rewardseq.append(reward)
+        print("cumulative reward=", reward, file=output)
         #update omega using actor-critique#
         print("Q_grad_omega=", Q_grad_omega_old, file=output)
         factor=lr_omega*TD
@@ -450,8 +458,25 @@ if __name__ == "__main__":
     #plot the Q values#
     plt.figure(figsize = (14,10))
     plt.plot(Q)
+    plt.xlabel('iteration')
+    plt.ylabel('action-value-function')
     plt.savefig('Q.png')
     plt.show()   
     
+    #plot the temporal differences#
+    plt.figure(figsize = (14,10))
+    plt.plot(TemporalDifference)
+    plt.xlabel('iteration')
+    plt.ylabel('temporal difference function')
+    plt.savefig('TD.png')
+    plt.show()   
+    
+    #plot the reward sequences#
+    plt.figure(figsize = (14,10))
+    plt.plot(rewardseq)
+    plt.xlabel('iteration')
+    plt.ylabel('Sum of rewards during episode')
+    plt.savefig('rewards.png')
+    plt.show()   
     
 output.close() 
