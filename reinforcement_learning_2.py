@@ -2,7 +2,7 @@
 """
 Created on Fri Jan  3 14:33:36 2020
 
-@author: Wenqing Hu and Louis Steimeister
+@author: Wenqing Hu and Louis Steinmeister
 
 Title: Reinforcement Learning for the joint control of onsite microgrid and manufacturing system
 """
@@ -37,7 +37,7 @@ lr_theta=0.003
 lr_omega=0.0003
 
 #the discount factor gamma when calculating the total cost#
-gamma=0.99
+gamma=0.999
 
 
 """
@@ -314,7 +314,8 @@ if __name__ == "__main__":
     TemporalDifference=[]
     rewardseq=[]
     reward=0
-
+    diff_omega=[]
+   
     for t in range(4000):
         #current states and actions S_t and A_t are stored in class System#
         print("*********************Time Step", t, "*********************", file=output)
@@ -420,7 +421,15 @@ if __name__ == "__main__":
         print("lr_omega*TD=", factor, file=output)
         print("omega=", np.array(omega), file=output)
         my_critic.update_weights(factor)
-        omega = [var for var in my_critic.trainable_variables]
+        #update and calculate the norm difference in omega#
+        if t==0:
+            diff_omega.append(0)
+            omega = [var.numpy() for var in my_critic.trainable_variables]
+        else:
+            omega_old=omega
+            omega = [var.numpy() for var in my_critic.trainable_variables]
+            omega_new=omega
+            diff_omega.append(np.sum([np.linalg.norm(new_var-old_var) for new_var, old_var in zip(omega_new,omega_old)]))
         """
         for i in range(number_machines):
             omega[1-1][i]=omega[1-1][i]-factor*Q_grad_omega_old[1-1][i]
@@ -442,7 +451,7 @@ if __name__ == "__main__":
         
         #discount the learning rate#
         lr_theta=lr_theta*1
-        lr_omega=lr_omega*0.99
+        lr_omega=lr_omega*0.999
         
         print(" ", file=output)
         
@@ -461,7 +470,7 @@ if __name__ == "__main__":
     plt.xlabel('iteration')
     plt.ylabel('action-value-function')
     plt.savefig('Q.png')
-    plt.show()   
+    plt.show() 
     
     #plot the temporal differences#
     plt.figure(figsize = (14,10))
@@ -477,6 +486,15 @@ if __name__ == "__main__":
     plt.xlabel('iteration')
     plt.ylabel('Sum of rewards during episode')
     plt.savefig('rewards.png')
+    plt.show()       
+
+    #plot the weight difference sequences#
+    plt.figure(figsize = (14,10))
+    plt.plot(diff_omega)
+    plt.xlabel('iteration')
+    plt.ylabel('L2 norm of the difference in the weights')
+    plt.savefig('weightdifference.png')
     plt.show()   
+    
     
 output.close() 
