@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 code for the manufactoring system
-
+Author: Yunzhao Zhang and Wenqing Hu
 
 """
 
