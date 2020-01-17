@@ -16,3 +16,7 @@ reinforcement learning via linear Q-function
 4. reinforcement_learning_2.py
 
 reinforcement learning via two layer fully connected neural network
+
+5. Simple Manufacturing System-Pure_Q-Learning.py
+
+Learn the microgrid-manufacturing system using pure Q-learning. This is to compare with our new method
