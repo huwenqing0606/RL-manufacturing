@@ -278,6 +278,15 @@ class update_theta(object):
 """
 Reinforcement Learning Algorithm: Off policy TD control combined with actor-critique
 Algorithm 1 in the paper
+
+when optimal policy is found, must add
+
+1. Total cost and throughput in given time horizon that the 
+algorithm is used to guide the bilateral control.
+
+2. Total energy demand across all time periods of the given 
+time horizon and the proportion of the energy supply to satisfy the demand.
+ 
 """
 if __name__ == "__main__":
     tf.enable_eager_execution()
@@ -301,7 +310,11 @@ if __name__ == "__main__":
     
     #randomly generate an initial theta and plot the bounday of the simplex where theta moves#
     r=np.random.uniform(0,1,size=6)
+    
+    #initialize the theta variable#
     theta=[r[0]*r[1], r[0]*(1-r[1]), r[2]*r[3], r[2]*(1-r[3]), r[4]*r[5], r[4]*(1-r[5])] 
+    thetainit=theta
+    
     x = [[0, 0], [0, 1], [1, 0]] 
     y = [[0, 1], [1, 0], [0, 0]]
     plt.figure(figsize = (14,10))
@@ -315,7 +328,7 @@ if __name__ == "__main__":
     rewardseq=[]
     reward=0
     diff_omega=[]
-   
+       
     for t in range(4000):
         #current states and actions S_t and A_t are stored in class System#
         print("*********************Time Step", t, "*********************", file=output)
@@ -460,6 +473,9 @@ if __name__ == "__main__":
         plt.scatter(theta[2], theta[3], marker='+', color='m')
         plt.scatter(theta[4], theta[5], marker='*', color='r')
     
+    #output the optimal theta#
+    thetaoptimal=theta
+    
     plt.savefig('theta.png')
     plt.show()  
     
@@ -495,6 +511,15 @@ if __name__ == "__main__":
     plt.ylabel('L2 norm of the difference in the weights')
     plt.savefig('weightdifference.png')
     plt.show()   
+    
+    
+    print("initial proportion of energy supply=", thetainit)
+    print("optimal proportion of energy supply=", thetaoptimal)
+    
+    #with the optimal theta at hand, run the system at a certain time horizon#
+    #Calculate 1. Total cost and throughput in given time horizon that the 
+    #algorithm is used to guide the bilateral control.
+    #2. Total energy demand across all time periods of the given time horizon 
     
     
 output.close() 
