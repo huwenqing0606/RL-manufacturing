@@ -507,17 +507,94 @@ if __name__ == "__main__":
     plt.savefig('weightdifference.png')
     plt.show()   
     
-    #with the optimal theta and optimal omega at hand, run the system at a certain time horizon.
-    #Calculate 1. Total cost and throughput in given time horizon that the algorithm is used to guide the bilateral control.
-    #Calculate 2. Total energy demand across all time periods of the given time horizon. 
-
+    #with the optimal theta and optimal omega at hand, run the system at a certain time horizon#
     #output the optimal theta and optimal omega#
     thetaoptimal=theta
     omegaoptimal=omega   
     print("initial proportion of energy supply=", thetainit)
     print("optimal proportion of energy supply=", thetaoptimal)
     print("optimal paramter for the neural-network integrated action-value function=", omegaoptimal)
+    #set the time horizon#
+    timehorizon=100
+    #run the MDP under optimal theta and optimal omega#
+    #at every step search among all discrete actions to find A^d_*=argmax_{A^d}Q(A^d, A^c(thetaoptimal), A^r(A^d, A^c(thetaoptimal)))#
+    #Calculate 1. Total cost (E) and throughput in given time horizon that the algorithm is used to guide the bilateral control#
+    #Calculate 2. Total energy demand across all time periods of the given time horizon#
+
+    #initialize the system and the grid#
+    grid=Microgrid(workingstatus=[0,0,0],
+                   SOC=0,
+                   actions_adjustingstatus=[0,0,0],
+                   actions_solar=[0,0,0],
+                   actions_wind=[0,0,0],
+                   actions_generator=[0,0,0],
+                   actions_purchased=[0,0],
+                   actions_discharged=0,
+                   solarirradiance=0,
+                   windspeed=0
+                   )
+    System=ManufacturingSystem(machine_states=["Off" for _ in range(number_machines)],
+                               machine_control_actions=["K" for _ in range(number_machines)],
+                               buffer_states=[2 for _ in range(number_machines-1)],
+                               grid=grid
+                               )
     
+    #set the total cost, total throughput and the total energy demand#
+    totalcost=0
+    totalthroughput=0
+    totalenergydemand=0
     
-    
+    for t in range(timehorizon):
+        #current states and actions S_t and A_t are stored in class System#
+        print("*********************Time Step", t, "*********************")
+        for i in range(number_machines):
+            print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action)
+            print(" Energy Consumption=", System.machine[i].EnergyConsumption())
+            if System.machine[i].is_last_machine:
+                print(" ", file=output)
+                print(" throughput=", System.machine[i].LastMachineProduction())
+                #accumulate the total throughput#
+                totalthroughput+=System.machine[i].LastMachineProduction()
+            print(" ", file=output)
+            if i!=number_machines-1:
+                print("Buffer", System.buffer[i].name, "=", System.buffer[i].state)
+        print("Microgrid working status [solar PV, wind turbine, generator]=", System.grid.workingstatus, ", SOC=", System.grid.SOC)
+        print(" microgrid actions [solar PV, wind turbine, generator]=", System.grid.actions_adjustingstatus)
+        print(" solar energy supporting [manufaturing, charging battery, sold back]=", System.grid.actions_solar)
+        print(" wind energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_wind)
+        print(" generator energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_generator)
+        print(" energy purchased from grid supporting [manufacturing, charging battery]=", System.grid.actions_purchased)
+        print(" energy discharged by the battery supporting manufacturing=", System.grid.actions_discharged)
+        print(" solar irradiance=", System.grid.solarirradiance)
+        print(" wind speed=", System.grid.windspeed)
+        print(" Microgrid Energy Consumption=", System.grid.EnergyConsumption())
+        print(" Microgrid Operational Cost=", System.grid.OperationalCost())
+        print(" Microgrid SoldBackReward=", System.grid.SoldBackReward())
+        #calculate the total cost at S_t, A_t: E(S_t, A_t)#
+        E=System.average_total_cost()
+        print(" ")
+        print("Average Total Cost=", E)
+        #accumulate the total cost#
+        totalcost+=E
+        #determine the next states and actions#
+
+        grid=Microgrid(workingstatus=next_workingstatus,
+                       SOC=next_SOC,
+                       actions_adjustingstatus=next_actions_adjustingstatus,
+                       actions_solar=next_actions_solar,
+                       actions_wind=next_actions_wind,
+                       actions_generator=next_actions_generator,
+                       actions_purchased=next_actions_purchased,
+                       actions_discharged=next_actions_discharged,
+                       solarirradiance=solarirradiance[t//8640],
+                       windspeed=windspeed[t//8640]
+                       )
+        System=ManufacturingSystem(machine_states=next_machine_states, 
+                                   machine_control_actions=next_machine_control_actions, 
+                                   buffer_states=next_buffer_states,
+                                   grid=grid
+                                   )        
+        
+    print("total cost=", totalcost, )    
+        
 output.close() 
