@@ -4,7 +4,8 @@ Created on Fri Jan  3 14:33:36 2020
 @author: Wenqing Hu and Louis Steinmeister
 Title: Reinforcement Learning for the joint control of onsite microgrid and manufacturing system
 """
-output = open('output.txt', 'w') 
+output = open('output.txt', 'w')
+testoutput = open('testoutput.txt', 'w') 
 
 from microgrid_manufacturing_system import Microgrid, ManufacturingSystem, ActionSimulation
 from projectionSimplex import projection
@@ -511,11 +512,13 @@ if __name__ == "__main__":
     #output the optimal theta and optimal omega#
     thetaoptimal=theta
     omegaoptimal=omega   
-    print("initial proportion of energy supply=", thetainit)
-    print("optimal proportion of energy supply=", thetaoptimal)
-    print("optimal paramter for the neural-network integrated action-value function=", omegaoptimal)
     #set the time horizon#
     timehorizon=100
+    print("***Run the system on optimal policy at a time horizon=", timehorizon,"***", file=testoutput)
+    print(" ", file=testoutput)
+    print("initial proportion of energy supply=", thetainit, file=testoutput)
+    print("optimal proportion of energy supply=", thetaoptimal, file=testoutput)
+    print("optimal paramter for the neural-network integrated action-value function=", omegaoptimal, file=testoutput)
     #run the MDP under optimal theta and optimal omega#
     #at every step search among all discrete actions to find A^d_*=argmax_{A^d}Q(A^d, A^c(thetaoptimal), A^r(A^d, A^c(thetaoptimal)))#
     #Calculate 1. Total cost (E) and throughput in given time horizon that the algorithm is used to guide the bilateral control#
@@ -546,37 +549,39 @@ if __name__ == "__main__":
     
     for t in range(timehorizon):
         #current states and actions S_t and A_t are stored in class System#
-        print("*********************Time Step", t, "*********************")
+        print("*********************Time Step", t, "*********************", file=testoutput)
         for i in range(number_machines):
-            print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action)
-            print(" Energy Consumption=", System.machine[i].EnergyConsumption())
+            print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action, file=testoutput)
+            print(" Energy Consumption=", System.machine[i].EnergyConsumption(), file=testoutput)
             if System.machine[i].is_last_machine:
-                print(" ", file=output)
-                print(" throughput=", System.machine[i].LastMachineProduction())
+                print(" ", file=testoutput)
+                print(" throughput=", System.machine[i].LastMachineProduction(), file=testoutput)
                 #accumulate the total throughput#
                 totalthroughput+=System.machine[i].LastMachineProduction()
-            print(" ", file=output)
+            print(" ", file=testoutput)
             if i!=number_machines-1:
-                print("Buffer", System.buffer[i].name, "=", System.buffer[i].state)
-        print("Microgrid working status [solar PV, wind turbine, generator]=", System.grid.workingstatus, ", SOC=", System.grid.SOC)
-        print(" microgrid actions [solar PV, wind turbine, generator]=", System.grid.actions_adjustingstatus)
-        print(" solar energy supporting [manufaturing, charging battery, sold back]=", System.grid.actions_solar)
-        print(" wind energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_wind)
-        print(" generator energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_generator)
-        print(" energy purchased from grid supporting [manufacturing, charging battery]=", System.grid.actions_purchased)
-        print(" energy discharged by the battery supporting manufacturing=", System.grid.actions_discharged)
-        print(" solar irradiance=", System.grid.solarirradiance)
-        print(" wind speed=", System.grid.windspeed)
-        print(" Microgrid Energy Consumption=", System.grid.EnergyConsumption())
-        print(" Microgrid Operational Cost=", System.grid.OperationalCost())
-        print(" Microgrid SoldBackReward=", System.grid.SoldBackReward())
+                print("Buffer", System.buffer[i].name, "=", System.buffer[i].state, file=testoutput)
+        print("Microgrid working status [solar PV, wind turbine, generator]=", System.grid.workingstatus, ", SOC=", System.grid.SOC, file=testoutput)
+        print(" microgrid actions [solar PV, wind turbine, generator]=", System.grid.actions_adjustingstatus, file=testoutput)
+        print(" solar energy supporting [manufaturing, charging battery, sold back]=", System.grid.actions_solar, file=testoutput)
+        print(" wind energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_wind, file=testoutput)
+        print(" generator energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_generator, file=testoutput)
+        print(" energy purchased from grid supporting [manufacturing, charging battery]=", System.grid.actions_purchased, file=testoutput)
+        print(" energy discharged by the battery supporting manufacturing=", System.grid.actions_discharged, file=testoutput)
+        print(" solar irradiance=", System.grid.solarirradiance, file=testoutput)
+        print(" wind speed=", System.grid.windspeed, file=testoutput)
+        print(" Microgrid Energy Consumption=", System.grid.EnergyConsumption(), file=testoutput)
+        print(" Microgrid Operational Cost=", System.grid.OperationalCost(), file=testoutput)
+        print(" Microgrid SoldBackReward=", System.grid.SoldBackReward(), file=testoutput)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
         E=System.average_total_cost()
-        print(" ")
-        print("Average Total Cost=", E)
+        print(" ", file=testoutput)
+        print("Average Total Cost=", E, file=testoutput)
         #accumulate the total cost#
         totalcost+=E
         #determine the next states and actions#
+        
+        
 
         grid=Microgrid(workingstatus=next_workingstatus,
                        SOC=next_SOC,
@@ -595,6 +600,6 @@ if __name__ == "__main__":
                                    grid=grid
                                    )        
         
-    print("total cost=", totalcost, )    
+    print("total cost=", totalcost, file=testoutput)    
         
 output.close() 
