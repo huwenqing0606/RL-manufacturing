@@ -673,16 +673,17 @@ class ActionSimulation(object):
 Generate the set of all admissible machine actions based on the current state S_{t+1} of the manufacturing system.
 The set of all machine actions will be stored in a binary tree, the depth of the tree = num_machines.
 If at a certain node of the tree there is no action, return None 
+Search the tree and return all possible admissible machine actions as a list
 """
 class MachineActionSet(object):
     
     def __init__(self, 
                  machine_action):
-        self.value=machine_action
+        self.root=machine_action
         self.left_child=None
         self.right_child=None
     
-    def insert_left(self, machine_action):
+    def InsertLeft(self, machine_action):
         
         if self.left_child == None:
             self.left_child = MachineActionSet(machine_action)
@@ -690,10 +691,49 @@ class MachineActionSet(object):
             new_node = MachineActionSet(machine_action)
             new_node.left_child = self.left_child
             self.left_child = new_node
+            
+    def InsertRight(self, machine_action):
         
-    def MachineActions(self):
+        if self.right_child == None:
+            self.right_child = MachineActionSet(machine_action)
+        else:
+            new_node = MachineActionSet(machine_action)
+            new_node.right_child = self.right_child
+            self.right_child = new_node
         
+    def BuildTree(self, System, level, machine_action_set):
+        #build the tree with root "ROOT", each level corresponding to admissible machine actions for the machine at that level#
+        if level < number_machines:
+            if System.machine_states[level-1]=="Opr":
+                machine_action_set.InsertLeft("K")
+                self.BuildTree(System, level+1, machine_action_set.left_child)
+                machine_action_set.InsertRight("H")
+                self.BuildTree(System, level+1, machine_action_set.right_child)
+            elif System.machine_states[level-1]=="Blo":
+                machine_action_set.InsertLeft("K")
+                self.BuildTree(System, level+1, machine_action_set.left_child)
+                machine_action_set.InsertRight("H")
+                self.BuildTree(System, level+1, machine_action_set.right_child)
+            elif System.machine_states[level-1]=="Sta":
+                machine_action_set.InsertLeft("K")
+                self.BuildTree(System, level+1, machine_action_set.left_child)
+                machine_action_set.InsertRight("H")
+                self.BuildTree(System, level+1, machine_action_set.right_child)
+            elif System.machine_states[level-1]=="Off":
+                machine_action_set.InsertLeft("K")
+                self.BuildTree(System, level+1, machine_action_set.left_child)
+                machine_action_set.InsertRight("W")
+                self.BuildTree(System, level+1, machine_action_set.right_child)
+            else:
+                machine_action_set.InsertLeft("K")
+                self.BuildTree(System, level+1, machine_action_set.left_child)
+                machine_action_set.InsertRight(None)
+                self.BuildTree(System, level+1, machine_action_set.right_child)
+        else:
+            return machine_action_set
 
+    def TraverseTree
+        #traverse the tree and output the set of all admissible machine actions as a list#
 
 
 
