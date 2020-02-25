@@ -668,7 +668,6 @@ class ActionSimulation(object):
         return actions_purchased, actions_discharged
             
 
-machine_action_set_list=[]
 """
 Generate the set of all admissible machine actions based on the current state S_{t+1} of the manufacturing system.
 The set of all machine actions will be stored in a tree with branches 1 or 2, the depth of the tree = num_machines.
@@ -681,6 +680,7 @@ class MachineActionTree(object):
         self.root=machine_action
         self.left_child=None
         self.right_child=None
+        self.machine_action_set_list=[]
     
     def InsertLeft(self, machine_action):
         #insert the left child of the tree from the root#
@@ -742,9 +742,8 @@ class MachineActionTree(object):
                 self.TraverseTree(level+1, tree.right_child, machine_action_list)
                 machine_action_list.pop()
         else:
-            print(machine_action_list)
-            machine_action_set_list.append(machine_action_list)
-            print(machine_action_set_list)
+            machine_action_list_copy=machine_action_list.copy()
+            self.machine_action_set_list.append(machine_action_list_copy)
             return None
 
 
@@ -823,20 +822,13 @@ if __name__ == "__main__":
                                    grid=grid
                                    )  
         
-    
+    #test the tree structure in the generation of all admissible machine actions#
     print("*********************Test the Machine Action Tree*********************")
     for i in range(number_machines):
         print(System.machine[i].PrintMachine())
     machine_action_tree=MachineActionTree(machine_action="ROOT")
     machine_action_tree.BuildTree(System, level=0, tree=machine_action_tree)
-#    print(machine_action_tree.root)
-#    print(machine_action_tree.left_child.root)
-#    print(machine_action_tree.right_child.root)
-#    print(machine_action_tree.left_child.left_child.root)
-#    print(machine_action_tree.left_child.right_child.root)
-#    print(machine_action_tree.right_child.left_child.root)
-#    print(machine_action_tree.right_child.right_child.root)
-    
     machine_action_list=[]
     machine_action_tree.TraverseTree(level=0, tree=machine_action_tree, machine_action_list=[])
-
+    print("admissible machine actions=", machine_action_tree.machine_action_set_list, 
+          "\nnumber of the admissible actions=", len(machine_action_tree.machine_action_set_list))
