@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
 """
-MDP for joint control of microgrid and manufactoring system
-author: Wenqing Hu (Missouri S&T)
+Created on Fri Jan 3 14:33:36 2020
+@author: Wenqing Hu (Missouri S&T)
+Title: MDP for joint control of microgrid and manufactoring system
 """
+
 import numpy as np
 from random import choice
 from projectionSimplex import projection
@@ -664,6 +667,37 @@ class ActionSimulation(object):
         #return actions_purchased and actions_discharged#
         return actions_purchased, actions_discharged
             
+
+
+"""
+Generate the set of all admissible machine actions based on the current state S_{t+1} of the manufacturing system.
+The set of all machine actions will be stored in a binary tree, the depth of the tree = num_machines.
+If at a certain node of the tree there is no action, return None 
+"""
+class MachineActionSet(object):
+    
+    def __init__(self, 
+                 machine_action):
+        self.value=machine_action
+        self.left_child=None
+        self.right_child=None
+    
+    def insert_left(self, machine_action):
+        
+        if self.left_child == None:
+            self.left_child = MachineActionSet(machine_action)
+        else:
+            new_node = MachineActionSet(machine_action)
+            new_node.left_child = self.left_child
+            self.left_child = new_node
+        
+    def MachineActions(self):
+        
+
+
+
+
+
 
 
 """
