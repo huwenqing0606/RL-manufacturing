@@ -668,14 +668,13 @@ class ActionSimulation(object):
         return actions_purchased, actions_discharged
             
 
-
+machine_action_set_list=[]
 """
 Generate the set of all admissible machine actions based on the current state S_{t+1} of the manufacturing system.
-The set of all machine actions will be stored in a binary tree, the depth of the tree = num_machines.
-If at a certain node of the tree there is no action, return None 
+The set of all machine actions will be stored in a tree with branches 1 or 2, the depth of the tree = num_machines.
 Search the tree and return all possible admissible machine actions as a list
 """
-class MachineActionSet(object):
+class MachineActionTree(object):
     
     def __init__(self, 
                  machine_action):
@@ -684,59 +683,69 @@ class MachineActionSet(object):
         self.right_child=None
     
     def InsertLeft(self, machine_action):
-        
+        #insert the left child of the tree from the root#
         if self.left_child == None:
-            self.left_child = MachineActionSet(machine_action)
+            self.left_child = MachineActionTree(machine_action)
         else:
-            new_node = MachineActionSet(machine_action)
+            new_node = MachineActionTree(machine_action)
             new_node.left_child = self.left_child
             self.left_child = new_node
             
     def InsertRight(self, machine_action):
-        
+        #insert the right child of the tree from the root#
         if self.right_child == None:
-            self.right_child = MachineActionSet(machine_action)
+            self.right_child = MachineActionTree(machine_action)
         else:
-            new_node = MachineActionSet(machine_action)
+            new_node = MachineActionTree(machine_action)
             new_node.right_child = self.right_child
             self.right_child = new_node
         
-    def BuildTree(self, System, level, machine_action_set):
+    def BuildTree(self, System, level, tree):
         #build the tree with root "ROOT", each level corresponding to admissible machine actions for the machine at that level#
         if level < number_machines:
-            if System.machine_states[level-1]=="Opr":
-                machine_action_set.InsertLeft("K")
-                self.BuildTree(System, level+1, machine_action_set.left_child)
-                machine_action_set.InsertRight("H")
-                self.BuildTree(System, level+1, machine_action_set.right_child)
-            elif System.machine_states[level-1]=="Blo":
-                machine_action_set.InsertLeft("K")
-                self.BuildTree(System, level+1, machine_action_set.left_child)
-                machine_action_set.InsertRight("H")
-                self.BuildTree(System, level+1, machine_action_set.right_child)
-            elif System.machine_states[level-1]=="Sta":
-                machine_action_set.InsertLeft("K")
-                self.BuildTree(System, level+1, machine_action_set.left_child)
-                machine_action_set.InsertRight("H")
-                self.BuildTree(System, level+1, machine_action_set.right_child)
-            elif System.machine_states[level-1]=="Off":
-                machine_action_set.InsertLeft("K")
-                self.BuildTree(System, level+1, machine_action_set.left_child)
-                machine_action_set.InsertRight("W")
-                self.BuildTree(System, level+1, machine_action_set.right_child)
+            if System.machine_states[level]=="Opr":
+                tree.InsertLeft("K")
+                self.BuildTree(System, level+1, tree.left_child)
+                tree.InsertRight("H")
+                self.BuildTree(System, level+1, tree.right_child)
+            elif System.machine_states[level]=="Blo":
+                tree.InsertLeft("K")
+                self.BuildTree(System, level+1, tree.left_child)
+                tree.InsertRight("H")
+                self.BuildTree(System, level+1, tree.right_child)
+            elif System.machine_states[level]=="Sta":
+                tree.InsertLeft("K")
+                self.BuildTree(System, level+1, tree.left_child)
+                tree.InsertRight("H")
+                self.BuildTree(System, level+1, tree.right_child)
+            elif System.machine_states[level]=="Off":
+                tree.InsertLeft("K")
+                self.BuildTree(System, level+1, tree.left_child)
+                tree.InsertRight("W")
+                self.BuildTree(System, level+1, tree.right_child)
             else:
-                machine_action_set.InsertLeft("K")
-                self.BuildTree(System, level+1, machine_action_set.left_child)
-                machine_action_set.InsertRight(None)
-                self.BuildTree(System, level+1, machine_action_set.right_child)
+                tree.InsertLeft("K")
+                self.BuildTree(System, level+1, tree.left_child)
         else:
-            return machine_action_set
+            return None
 
-    def TraverseTree
+    def TraverseTree(self, level, tree, machine_action_list):
         #traverse the tree and output the set of all admissible machine actions as a list#
-
-
-
+        if level < number_machines:
+            machine_action_list.append(tree.left_child.root)
+            self.TraverseTree(level+1, tree.left_child, machine_action_list)
+            machine_action_list.pop()
+            if tree.right_child == None:
+                return None
+            else:
+                machine_action_list.append(tree.right_child.root)
+                self.TraverseTree(level+1, tree.right_child, machine_action_list)
+                machine_action_list.pop()
+        else:
+            print(machine_action_list)
+            machine_action_set_list.append(machine_action_list)
+            print(machine_action_set_list)
+            return None
 
 
 
@@ -761,7 +770,7 @@ if __name__ == "__main__":
                                grid=grid
                                )
     theta=[0,0,0,0,0,0]
-    for t in range(1000):
+    for t in range(10):
         #current states and actions S_t and A_t are stored in class System#
         print("*********************Time Step", t, "*********************")
         for i in range(number_machines):
@@ -812,5 +821,22 @@ if __name__ == "__main__":
                                    machine_control_actions=next_machine_control_actions, 
                                    buffer_states=next_buffer_states,
                                    grid=grid
-                                   )        
+                                   )  
+        
+    
+    print("*********************Test the Machine Action Tree*********************")
+    for i in range(number_machines):
+        print(System.machine[i].PrintMachine())
+    machine_action_tree=MachineActionTree(machine_action="ROOT")
+    machine_action_tree.BuildTree(System, level=0, tree=machine_action_tree)
+#    print(machine_action_tree.root)
+#    print(machine_action_tree.left_child.root)
+#    print(machine_action_tree.right_child.root)
+#    print(machine_action_tree.left_child.left_child.root)
+#    print(machine_action_tree.left_child.right_child.root)
+#    print(machine_action_tree.right_child.left_child.root)
+#    print(machine_action_tree.right_child.right_child.root)
+    
+    machine_action_list=[]
+    machine_action_tree.TraverseTree(level=0, tree=machine_action_tree, machine_action_list=[])
 
