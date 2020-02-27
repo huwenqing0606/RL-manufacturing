@@ -7,6 +7,7 @@ Title: Reinforcement Learning for the joint control of onsite microgrid and manu
 
 output = open('train_output.txt', 'w')
 testoutput = open('test_output.txt', 'w') 
+bmoutput = open('benchmark_output.txt', 'w')
 
 from microgrid_manufacturing_system import Microgrid, ManufacturingSystem, ActionSimulation, MicrogridActionSet_Discrete_Remainder, MachineActionTree
 from projectionSimplex import projection
@@ -670,9 +671,114 @@ if __name__ == "__main__":
                                    grid=grid
                                    )        
         #end of the iteration loop for reinforcement learning training process#
-        
-        
     print("total cost=", totalcost, file=testoutput)    
     print("total throughput=", totalthroughput, file=testoutput)    
         
+    
+    #As benchmark, with initial theta and randomly simulated actions, run the system at a certain time horizon#
+    print("\n*************************BenchMark System with initial theta and random actions*************************")
+    print("***Run the system on random policy at a time horizon=", testing_number_iteration,"***", file=bmoutput)
+    print("\n", file=bmoutput)
+    print("initial proportion of energy supply=", thetainit, file=bmoutput)
+    print("\n", file=bmoutput)
+    #initialize the system and the grid#
+    grid=Microgrid(workingstatus=[0,0,0],
+                   SOC=0,
+                   actions_adjustingstatus=[0,0,0],
+                   actions_solar=[0,0,0],
+                   actions_wind=[0,0,0],
+                   actions_generator=[0,0,0],
+                   actions_purchased=[0,0],
+                   actions_discharged=0,
+                   solarirradiance=0,
+                   windspeed=0
+                   )
+    System=ManufacturingSystem(machine_states=["Off" for _ in range(number_machines)],
+                               machine_control_actions=["K" for _ in range(number_machines)],
+                               buffer_states=[2 for _ in range(number_machines-1)],
+                               grid=grid
+                               )
+    #set the total cost, total throughput and the total energy demand#
+    totalcost=0
+    totalthroughput=0
+    totalenergydemand=0 #need to specify what exactly is totalenergy demand
+    #benchmark system iteration loop
+    for t in range(testing_number_iteration):
+        #start of the iteration loop for a benchmark system with initial theta and random actions#
+        #current states and actions S_t and A_t are stored in class System#
+        print("*********************Time Step", t, "*********************", file=bmoutput)
+        for i in range(number_machines):
+            print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action, file=bmoutput)
+            print(" Energy Consumption=", System.machine[i].EnergyConsumption(), file=bmoutput)
+            if System.machine[i].is_last_machine:
+                print("\n", file=bmoutput)
+                print(" throughput=", System.machine[i].LastMachineProduction(), file=bmoutput)
+                #accumulate the total throughput#
+                totalthroughput+=System.machine[i].LastMachineProduction()
+            print("\n", file=bmoutput)
+            if i!=number_machines-1:
+                print("Buffer", System.buffer[i].name, "=", System.buffer[i].state, file=bmoutput)
+        print("Microgrid working status [solar PV, wind turbine, generator]=", System.grid.workingstatus, ", SOC=", System.grid.SOC, file=bmoutput)
+        print(" microgrid actions [solar PV, wind turbine, generator]=", System.grid.actions_adjustingstatus, file=bmoutput)
+        print(" solar energy supporting [manufaturing, charging battery, sold back]=", System.grid.actions_solar, file=bmoutput)
+        print(" wind energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_wind, file=bmoutput)
+        print(" generator energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_generator, file=bmoutput)
+        print(" energy purchased from grid supporting [manufacturing, charging battery]=", System.grid.actions_purchased, file=bmoutput)
+        print(" energy discharged by the battery supporting manufacturing=", System.grid.actions_discharged, file=bmoutput)
+        print(" solar irradiance=", System.grid.solarirradiance, file=bmoutput)
+        print(" wind speed=", System.grid.windspeed, file=bmoutput)
+        print(" Microgrid Energy Consumption=", System.grid.EnergyConsumption(), file=bmoutput)
+        print(" Microgrid Operational Cost=", System.grid.OperationalCost(), file=bmoutput)
+        print(" Microgrid SoldBackReward=", System.grid.SoldBackReward(), file=bmoutput)
+        #calculate the total cost at S_t, A_t: E(S_t, A_t)#
+        E=System.average_total_cost()
+        print("\n", file=bmoutput)
+        print("Average Total Cost=", E, file=bmoutput)
+        #accumulate the total cost#
+        totalcost+=E
+        #determine the next system and grid states#
+        next_machine_states, next_buffer_states=System.transition_manufacturing()
+        next_workingstatus, next_SOC=System.grid.transition()
+        next_action=ActionSimulation(System=ManufacturingSystem(machine_states=next_machine_states,
+                                                                machine_control_actions=["K" for _ in range(number_machines)],
+                                                                buffer_states=next_buffer_states,
+                                                                grid=Microgrid(workingstatus=next_workingstatus,
+                                                                               SOC=next_SOC,
+                                                                               actions_adjustingstatus=[0,0,0],
+                                                                               actions_solar=[0,0,0],
+                                                                               actions_wind=[0,0,0],
+                                                                               actions_generator=[0,0,0],
+                                                                               actions_purchased=[0,0],
+                                                                               actions_discharged=0,
+                                                                               solarirradiance=solarirradiance[t//8640],
+                                                                               windspeed=windspeed[t//8640]
+                                                                               )
+                                                                )
+                                    )
+        next_actions_solar, next_actions_wind, next_actions_generator=next_action.MicroGridActions_SolarWindGenerator(thetainit)
+        next_actions_purchased, next_actions_discharged=next_action.MicroGridActions_PurchasedDischarged(next_actions_solar,
+                                                                                                         next_actions_wind,
+                                                                                                         next_actions_generator)
+        next_machine_control_actions=next_action.MachineActions()
+        #update the manufacturing system and the grid according to S_{t+1}, A^{*,d}_{t+1}, A^c(thetaoptimal), A^{*,r}_{t+1}#
+        grid=Microgrid(workingstatus=next_workingstatus,
+                       SOC=next_SOC,
+                       actions_adjustingstatus=next_actions_adjustingstatus,
+                       actions_solar=next_actions_solar,
+                       actions_wind=next_actions_wind,
+                       actions_generator=next_actions_generator,
+                       actions_purchased=next_actions_purchased,
+                       actions_discharged=next_actions_discharged,
+                       solarirradiance=solarirradiance[t//8640],
+                       windspeed=windspeed[t//8640]
+                       )
+        System=ManufacturingSystem(machine_states=next_machine_states, 
+                                   machine_control_actions=next_machine_control_actions, 
+                                   buffer_states=next_buffer_states,
+                                   grid=grid
+                                   )        
+        #end of the iteration loop for for a benchmark system with initial theta and random actions#
+    print("total cost=", totalcost, file=bmoutput)    
+    print("total throughput=", totalthroughput, file=bmoutput)    
+
 output.close() 
