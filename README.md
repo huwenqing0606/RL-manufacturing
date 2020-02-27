@@ -9,11 +9,11 @@ simulates the joint operation of microgrid and manufacturing system
 
 proximal operator to the simplex D^c
 
-3. reinforcement_learning.py
+3. reinforcement_learning_linearQ.py
 
 reinforcement learning via linear Q-function
 
-4. reinforcement_learning_2.py
+4. reinforcement_learning.py
 
 reinforcement learning via two layer fully connected neural network
 
