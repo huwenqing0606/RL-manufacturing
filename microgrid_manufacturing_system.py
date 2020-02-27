@@ -668,6 +668,94 @@ class ActionSimulation(object):
         return actions_purchased, actions_discharged
             
 
+
+"""
+Generate the set of all admissible microgrid actions for adjusting the microgrid status
+Generate the set of all admissible microgrid actions for energy purchased/discharged , i.e. the remainder action A^r, 
+ based on the current state S_{t+1} of the manufacturing system and the current discrete actions A^d 
+Return all admissible microgrid actions for adjusting the microgrid status and all microgrid actions 
+ for energy purchase/discharge as a list
+"""
+class MicrogridActionSet_Discrete_Remainder(object):
+    def __init__(self,
+                 System=ManufacturingSystem(machine_states=["Off" for _ in range(number_machines)],
+                                            machine_control_actions=["K" for _ in range(number_machines)],
+                                            buffer_states=[0 for _ in range(number_machines-1)],
+                                            grid=Microgrid(workingstatus=[0,0,0],
+                                                           SOC=0,
+                                                           actions_adjustingstatus=[0,0,0],
+                                                           actions_solar=[0,0,0],
+                                                           actions_wind=[0,0,0],
+                                                           actions_generator=[0,0,0],
+                                                           actions_purchased=[0,0],
+                                                           actions_discharged=0,
+                                                           solarirradiance=0,
+                                                           windspeed=0
+                                                           ))
+                 ):
+        #the ManufacturingSystem is with updated machine and microgrid states S_{t+1}
+        #from these we obtain the set of all admissible microgrid actions for adjusting the status of [solar, wind, generator], 
+        #and the set of all admissible microgrid actions for energy purchased/discharged
+        self.System=System
+    
+    def List_AdjustingStatus(self):
+        #return all possible microgrid actions for adjusting the status [solar, wind, generator]#
+        microgrid_action_set_list_adjustingstatus=[]
+        for adjust_solar in range(2):
+            for adjust_wind in range(2):
+                for adjust_generator in range(2):
+                    microgrid_action_set_list_adjustingstatus.append([adjust_solar, adjust_wind, adjust_generator])
+        return microgrid_action_set_list_adjustingstatus
+
+    def List_PurchasedDischarged(self, 
+                                 actions_solar=[0,0,0],
+                                 actions_wind=[0,0,0],
+                                 actions_generator=[0,0,0]):
+        #return all possible microgrid actions for the use of the purchased energy and the energy discharge#
+        #actions_solar, actions_wind, actions_generator are the actions to be taken at current system states#
+        TotalSoldBack=actions_solar[3-1]+actions_wind[3-1]+actions_generator[3-1]
+        #Total amount of sold back energy#
+        TotalBattery=actions_solar[2-1]+actions_wind[2-1]+actions_generator[2-1]
+        #Total amount if energy charged to the battery#
+        SOC_Condition=self.System.grid.SOC-rate_battery_discharge*Delta_t/charging_discharging_efficiency-SOC_min
+        #The condition for SOC at the current system state#
+        E_mfg=0
+        for i in range(number_machines):
+            E_mfg=E_mfg+self.System.machine[i].EnergyConsumption()
+        #total energy consumed by the manufacturing system, summing over all machines#
+        p_hat=E_mfg-(actions_solar[1-1]+actions_wind[1-1]+actions_generator[1-1])
+        if p_hat<0:
+            p_hat=0
+        #Set the p_hat#
+        p_tilde=E_mfg-(actions_solar[1-1]+actions_wind[1-1]+actions_generator[1-1]+rate_battery_discharge*Delta_t)
+        if p_tilde<0:
+            p_tilde=0
+        #Set the p_tilde#
+        ####Generate the list of the set of all admissible actions_purchased and actions_discharged according to the table in the paper####
+        #microgrid_action_set_list_purchased_discharged=[[action_purchased[0], action_purchased[1]], action_discharged]
+        microgrid_action_set_list_purchased_discharged=[]
+        if TotalSoldBack>0 and TotalBattery>0 and SOC_Condition>0:
+            microgrid_action_set_list_purchased_discharged=[ [[0,0], 0] ]
+        elif TotalSoldBack>0 and TotalBattery>0 and SOC_Condition<=0:
+            microgrid_action_set_list_purchased_discharged=[ [[0,0], 0] ]
+        elif TotalSoldBack>0 and TotalBattery<=0 and SOC_Condition>0:
+            microgrid_action_set_list_purchased_discharged=[ [[0,0], 0] , [[0,0], rate_battery_discharge*Delta_t] ]
+        elif TotalSoldBack>0 and TotalBattery<=0 and SOC_Condition<=0:
+            microgrid_action_set_list_purchased_discharged=[ [[0,0], 0] ]
+        elif TotalSoldBack<=0 and TotalBattery>0 and SOC_Condition>0:
+            microgrid_action_set_list_purchased_discharged=[ [[p_hat, 0], 0] , [[0, p_hat], 0] ]
+        elif TotalSoldBack<=0 and TotalBattery>0 and SOC_Condition<=0:
+            microgrid_action_set_list_purchased_discharged=[ [[p_hat, 0], 0] , [[0, p_hat], 0] ]
+        elif TotalSoldBack<=0 and TotalBattery<=0 and SOC_Condition>0:
+            microgrid_action_set_list_purchased_discharged=[ [[p_hat, 0], 0] , [[0, p_hat], 0] , [[p_tilde, 0], rate_battery_discharge*Delta_t] ]
+        else:
+            microgrid_action_set_list_purchased_discharged=[ [[p_hat, 0], 0] , [[0, p_hat], 0] ]
+        #return the list of the set of all admissible actions_purchased and actions_discharged#
+        return microgrid_action_set_list_purchased_discharged
+    
+
+
+
 """
 Generate the set of all admissible machine actions based on the current state S_{t+1} of the manufacturing system.
 The set of all machine actions will be stored in a tree with branches 1 or 2, the depth of the tree = num_machines.
@@ -823,12 +911,32 @@ if __name__ == "__main__":
                                    )  
         
     #test the tree structure in the generation of all admissible machine actions#
-    print("*********************Test the Machine Action Tree*********************")
+    #test the generation of all admissible microgrid adjusting actions and actions for energy purchased/discharged#
+    print("*********************Test the Maachine and Microgrid Action Generation*********************")
+    #first print the current system parameters#
     for i in range(number_machines):
         print(System.machine[i].PrintMachine())
+        if i!=number_machines-1:
+            print(System.buffer[i].PrintBuffer())
+    print(System.grid.PrintMicrogrid())
+    print("Average Total Cost=", System.average_total_cost())
+    #generate the admissible machine actions from the tree structure#
     machine_action_tree=MachineActionTree(machine_action="ROOT")
     machine_action_tree.BuildTree(System, level=0, tree=machine_action_tree)
     machine_action_list=[]
     machine_action_tree.TraverseTree(level=0, tree=machine_action_tree, machine_action_list=[])
-    print("admissible machine actions=", machine_action_tree.machine_action_set_list, 
-          "\nnumber of the admissible actions=", len(machine_action_tree.machine_action_set_list))
+    machine_action_set_list=machine_action_tree.machine_action_set_list
+    print("\nadmissible machine actions=\n", np.array(machine_action_set_list), 
+          "\nnumber of the admissible machine actions=", len(machine_action_set_list))
+    #generate the admissible microgrid actions for adjusting status and purchased/discharged
+    microgrid_action_set_DR=MicrogridActionSet_Discrete_Remainder(System)
+    microgrid_action_set_list_adjustingstatus=microgrid_action_set_DR.List_AdjustingStatus()
+    print("\nadmissible microgrid actions for adjusting status=\n", np.array(microgrid_action_set_list_adjustingstatus), 
+          "\nnumber of the admissible microgrid actions for adjusting status=", len(microgrid_action_set_list_adjustingstatus))
+    microgrid_action_set_list_purchased_discharged=microgrid_action_set_DR.List_PurchasedDischarged(actions_solar=[0.2,0.8,0],
+                                                                                                    actions_wind=[0,0.2,0.8],
+                                                                                                    actions_generator=[0.4,0.2,0])
+    print("\nadmissible microgrid actions for [purchased, discharged]=\n", np.array(microgrid_action_set_list_purchased_discharged), 
+          "\nnumber of the admissible microgrid actions for [purchased, discharged]=", len(microgrid_action_set_list_purchased_discharged))
+    
+    
