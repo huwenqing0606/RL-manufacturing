@@ -8,7 +8,7 @@ Title: Reinforcement Learning for the joint control of onsite microgrid and manu
 output = open('train_output.txt', 'w')
 testoutput = open('test_output.txt', 'w') 
 
-from microgrid_manufacturing_system import Microgrid, ManufacturingSystem, ActionSimulation
+from microgrid_manufacturing_system import Microgrid, ManufacturingSystem, ActionSimulation, MicrogridActionSet_Discrete_Remainder, MachineActionTree
 from projectionSimplex import projection
 import numpy as np
 import matplotlib.pyplot as plt
@@ -281,13 +281,14 @@ class update_theta(object):
 """
 Reinforcement Learning Algorithm: Off policy TD control combined with actor-critique
 Algorithm 1 in the paper
-when optimal policy is found, must add
+
+When optimal policy is found, must add
 1. Total cost and throughput in given time horizon that the 
-algorithm is used to guide the bilateral control.
+   algorithm is used to guide the bilateral control.
 2. Total energy demand across all time periods of the given 
-time horizon and the proportion of the energy supply to satisfy the demand.
- 
+   time horizon and the proportion of the energy supply to satisfy the demand. 
 """
+
 if __name__ == "__main__":
     tf.enable_eager_execution()
     #K.clear_session()
@@ -328,10 +329,11 @@ if __name__ == "__main__":
     rewardseq=[]
     reward=0
     diff_omega=[]
-       
+    
+    #reinforcement learning training process
     for t in range(training_number_iteration):
-        #beginning of the iteration loop for reinforcement learning training process#
-        #current states and actions S_t and A_t are stored in class System#
+        #beginning of the iteration loop for reinforcement learning training process
+        #current states and actions S_t and A_t are stored in class System
         print("*********************Time Step", t, "*********************", file=output)
         for i in range(number_machines):
             print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action, file=output)
@@ -354,11 +356,11 @@ if __name__ == "__main__":
         print(" Microgrid Energy Consumption=", System.grid.EnergyConsumption(), file=output)
         print(" Microgrid Operational Cost=", System.grid.OperationalCost(), file=output)
         print(" Microgrid SoldBackReward=", System.grid.SoldBackReward(), file=output)
-        #calculate the total cost at S_t, A_t: E(S_t, A_t)#
+        #calculate the total cost at S_t, A_t: E(S_t, A_t)
         E=System.average_total_cost()
         print(" ", file=output)
         print("Average Total Cost=", E, file=output)
-        #calculate the old Q-value and its gradient wrt omega: Q(S_t, A_t; omega_t) and grad_omega Q(S_t, A_t; omega_t)#
+        #calculate the old Q-value and its gradient wrt omega: Q(S_t, A_t; omega_t) and grad_omega Q(S_t, A_t; omega_t)
         av=action_value(System,my_critic)
         num_list_SA=av.num_list_States_Actions()
         print("states and actions in numerical list=", np.array(num_list_SA), file=output)
@@ -499,11 +501,11 @@ if __name__ == "__main__":
     omegaoptimal=omega   
 
     print("***Run the system on optimal policy at a time horizon=", testing_number_iteration,"***", file=testoutput)
-    print(" ", file=testoutput)
+    print("\n", file=testoutput)
     print("initial proportion of energy supply=", thetainit, file=testoutput)
     print("optimal proportion of energy supply=", thetaoptimal, file=testoutput)
-    print("optimal paramter for the neural-network integrated action-value function=", omegaoptimal, file=testoutput)
-    print(" ", file=testoutput)
+    print("optimal parameter for the neural-network integrated action-value function=", omegaoptimal, file=testoutput)
+    print("\n", file=testoutput)
     #run the MDP under optimal theta and optimal omega#
     #at every step search among all discrete actions to find A^d_*=argmin_{A^d}Q(A^d, A^c(thetaoptimal), A^r(A^d, A^c(thetaoptimal)))#
     #Calculate 1. Total cost (E) and throughput in given time horizon that the algorithm is used to guide the bilateral control#
@@ -530,20 +532,21 @@ if __name__ == "__main__":
     #set the total cost, total throughput and the total energy demand#
     totalcost=0
     totalthroughput=0
-    totalenergydemand=0
-    
+    totalenergydemand=0 #need to specify what exactly is totalenergy demand
+    #reinforcement learning testing loop
     for t in range(testing_number_iteration):
+        #start of the iteration loop for reinforcement learning training process#
         #current states and actions S_t and A_t are stored in class System#
         print("*********************Time Step", t, "*********************", file=testoutput)
         for i in range(number_machines):
             print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action, file=testoutput)
             print(" Energy Consumption=", System.machine[i].EnergyConsumption(), file=testoutput)
             if System.machine[i].is_last_machine:
-                print(" ", file=testoutput)
+                print("\n", file=testoutput)
                 print(" throughput=", System.machine[i].LastMachineProduction(), file=testoutput)
                 #accumulate the total throughput#
                 totalthroughput+=System.machine[i].LastMachineProduction()
-            print(" ", file=testoutput)
+            print("\n", file=testoutput)
             if i!=number_machines-1:
                 print("Buffer", System.buffer[i].name, "=", System.buffer[i].state, file=testoutput)
         print("Microgrid working status [solar PV, wind turbine, generator]=", System.grid.workingstatus, ", SOC=", System.grid.SOC, file=testoutput)
@@ -560,7 +563,7 @@ if __name__ == "__main__":
         print(" Microgrid SoldBackReward=", System.grid.SoldBackReward(), file=testoutput)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
         E=System.average_total_cost()
-        print(" ", file=testoutput)
+        print("\n", file=testoutput)
         print("Average Total Cost=", E, file=testoutput)
         #accumulate the total cost#
         totalcost+=E
@@ -588,33 +591,88 @@ if __name__ == "__main__":
         energy_generated_solar=AuxiliarySystem.grid.energy_generated_solar()
         energy_generated_wind=AuxiliarySystem.grid.energy_generated_wind()
         energy_generated_generator=AuxiliarySystem.grid.energy_generated_generator()
-        #under the optimal theta, calculate the next continuous actions A_{t+1}^c(thetaoptimal)=energy distributed in [solar, wind, generator]#
-        next_actions_solar=[energy_generated_solar*thetaoptimal[1-1], energy_generated_solar*thetaoptimal[2-1], energy_generated_solar*(1-thetaoptimal[1-1]-thetaoptimal[2-1])]
-        next_actions_wind=[energy_generated_wind*thetaoptimal[3-1], energy_generated_wind*thetaoptimal[4-1], energy_generated_wind*(1-thetaoptimal[3-1]-thetaoptimal[4-1])]
-        next_actions_generator=[energy_generated_generator*thetaoptimal[5-1], energy_generated_generator*thetaoptimal[6-1], energy_generated_generator*(1-thetaoptimal[5-1]-thetaoptimal[6-1])]
-        #determine the next discrete/remainder actions by finding A^d_{t+1}=argmin_{A^d}Q(S_{t+1}, A^d, A^c(thetaoptimal), A^r(A^d, A^c(thetaoptimal)); omegaoptimal)#
-        #traversing all discrete actions, at each time, compare the minimal up to date and a new discrete action#
-        #for each discrete action traversed, calculate the remainder action A^r, then the action-value Q#
-        #compare this action-value Q to the up-to date minimum stored, if less, then replace the Q and store the (A^d, A^c)#
-        """code to be filled here"""
-        #update the manufacturing system and the grid#
+        #under the optimal theta, calculate the optimal continuous actions A^c(thetaoptimal)=energy distributed in [solar, wind, generator]#
+        optimal_next_actions_solar=[energy_generated_solar*thetaoptimal[1-1], energy_generated_solar*thetaoptimal[2-1], energy_generated_solar*(1-thetaoptimal[1-1]-thetaoptimal[2-1])]
+        optimal_next_actions_wind=[energy_generated_wind*thetaoptimal[3-1], energy_generated_wind*thetaoptimal[4-1], energy_generated_wind*(1-thetaoptimal[3-1]-thetaoptimal[4-1])]
+        optimal_next_actions_generator=[energy_generated_generator*thetaoptimal[5-1], energy_generated_generator*thetaoptimal[6-1], energy_generated_generator*(1-thetaoptimal[5-1]-thetaoptimal[6-1])]
+        #bulid the list of the set of all admissible machine actions#    
+        machine_action_tree=MachineActionTree(machine_action="ROOT")
+        machine_action_tree.BuildTree(AuxiliarySystem, level=0, tree=machine_action_tree)
+        machine_action_list=[]
+        machine_action_tree.TraverseTree(level=0, tree=machine_action_tree, machine_action_list=[])
+        machine_action_set_list=machine_action_tree.machine_action_set_list
+        #build the list of the set of all admissible microgrid actions for adjusting the status and for purchase/discharge
+        microgrid_action_set_DR=MicrogridActionSet_Discrete_Remainder(AuxiliarySystem)
+        microgrid_action_set_list_adjustingstatus=microgrid_action_set_DR.List_AdjustingStatus()
+        microgrid_action_set_list_purchased_discharged=microgrid_action_set_DR.List_PurchasedDischarged(actions_solar=optimal_next_actions_solar,
+                                                                                                        actions_wind=optimal_next_actions_wind,
+                                                                                                        actions_generator=optimal_next_actions_generator)
+        #determine the next discrete/remainder actions by finding A^{*,d}_{t+1}=argmin_{A^d}Q(S_{t+1}, A^d, A^c(thetaoptimal), A^r(A^d, A^c(thetaoptimal)); omegaoptimal)#
+        #output A^{*,d}_{t+1}, A^{*,r}_{t+1}=A^r(A^{*,d}_{t+1}, A^c(thetaoptimal))
+        #output Q^*_{t+1}=Q(S_{t+1}, A^{*,d}_{t+1}, A^c(thetaoptimal), A^{*,r}_{t+1}; omegaoptimal)
+        optimal_Q=0
+        optimal_next_machine_actions=[]
+        optimal_next_microgrid_actions_adjustingstatus=[]
+        optimal_next_microgrid_actions_purchased=[]
+        optimal_next_microgrid_actions_discharged=0
+        i=1
+        for machine_action_list in machine_action_set_list:
+            for microgrid_action_list_adjustingstatus in microgrid_action_set_list_adjustingstatus:
+                for microgrid_action_list_purchased_discharged in microgrid_action_set_list_purchased_discharged:
+                    AuxiliarySystem=ManufacturingSystem(machine_states=next_machine_states,
+                                                        machine_control_actions=machine_action_list,
+                                                        buffer_states=next_buffer_states,
+                                                        grid=Microgrid(workingstatus=next_workingstatus,
+                                                                       SOC=next_SOC,
+                                                                       actions_adjustingstatus=microgrid_action_list_adjustingstatus,
+                                                                       actions_solar=optimal_next_actions_solar,
+                                                                       actions_wind=optimal_next_actions_wind,
+                                                                       actions_generator=optimal_next_actions_generator,
+                                                                       actions_purchased=microgrid_action_list_purchased_discharged[0],
+                                                                       actions_discharged=microgrid_action_list_purchased_discharged[1],
+                                                                       solarirradiance=solarirradiance[t//8640],
+                                                                       windspeed=windspeed[t//8640]
+                                                                       )
+                                                        )
+                    av=action_value(AuxiliarySystem, my_critic)
+                    num_list_SA=av.num_list_States_Actions()
+                    Q=av.Q(num_list_SA)
+                    if i==1:
+                        optimal_Q=Q
+                        optimal_next_machine_actions=machine_action_list
+                        optimal_next_microgrid_actions_adjustingstatus=microgrid_action_list_adjustingstatus
+                        optimal_next_microgrid_actions_purchased=microgrid_action_list_purchased_discharged[0]
+                        optimal_next_microgrid_actions_discharged=microgrid_action_list_purchased_discharged[1]
+                    else:
+                        if Q<optimal_Q:
+                            optimal_Q=Q
+                            optimal_next_machine_actions=machine_action_list
+                            optimal_next_microgrid_actions_adjustingstatus=microgrid_action_list_adjustingstatus
+                            optimal_next_microgrid_actions_purchased=microgrid_action_list_purchased_discharged[0]
+                            optimal_next_microgrid_actions_discharged=microgrid_action_list_purchased_discharged[1]
+                    i=i+1
+                    
+        #update the manufacturing system and the grid according to S_{t+1}, A^{*,d}_{t+1}, A^c(thetaoptimal), A^{*,r}_{t+1}#
         grid=Microgrid(workingstatus=next_workingstatus,
                        SOC=next_SOC,
-                       actions_adjustingstatus=next_actions_adjustingstatus,
-                       actions_solar=next_actions_solar,
-                       actions_wind=next_actions_wind,
-                       actions_generator=next_actions_generator,
-                       actions_purchased=next_actions_purchased,
-                       actions_discharged=next_actions_discharged,
+                       actions_adjustingstatus=optimal_next_microgrid_actions_adjustingstatus,
+                       actions_solar=optimal_next_actions_solar,
+                       actions_wind=optimal_next_actions_wind,
+                       actions_generator=optimal_next_actions_generator,
+                       actions_purchased=optimal_next_microgrid_actions_purchased,
+                       actions_discharged=optimal_next_microgrid_actions_discharged,
                        solarirradiance=solarirradiance[t//8640],
                        windspeed=windspeed[t//8640]
                        )
         System=ManufacturingSystem(machine_states=next_machine_states, 
-                                   machine_control_actions=next_machine_control_actions, 
+                                   machine_control_actions=optimal_next_machine_actions, 
                                    buffer_states=next_buffer_states,
                                    grid=grid
                                    )        
+        #end of the iteration loop for reinforcement learning training process#
+        
         
     print("total cost=", totalcost, file=testoutput)    
+    print("total throughput=", totalthroughput, file=testoutput)    
         
 output.close() 
