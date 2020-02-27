@@ -496,6 +496,14 @@ if __name__ == "__main__":
     plt.savefig('weightdifference.png')
     plt.show()   
     
+    
+    
+    #compare the optimal control and random control (benchmark)#
+    totalcostlist_optimal=[0]
+    totalthroughputlist_optimal=[0]
+    totalcostlist_benchmark=[0]
+    totalthroughputlist_benchmark=[0]
+    
     #with the optimal theta and optimal omega at hand, run the system at a certain time horizon#
     #output the optimal theta and optimal omega#
     thetaoptimal=theta
@@ -529,7 +537,7 @@ if __name__ == "__main__":
                                buffer_states=[2 for _ in range(number_machines-1)],
                                grid=grid
                                )
-    
+
     #set the total cost, total throughput and the total energy demand#
     totalcost=0
     totalthroughput=0
@@ -547,6 +555,7 @@ if __name__ == "__main__":
                 print(" throughput=", System.machine[i].LastMachineProduction(), file=testoutput)
                 #accumulate the total throughput#
                 totalthroughput+=System.machine[i].LastMachineProduction()
+                totalthroughputlist_optimal.append(totalthroughput)
             print("\n", file=testoutput)
             if i!=number_machines-1:
                 print("Buffer", System.buffer[i].name, "=", System.buffer[i].state, file=testoutput)
@@ -568,6 +577,7 @@ if __name__ == "__main__":
         print("Average Total Cost=", E, file=testoutput)
         #accumulate the total cost#
         totalcost+=E
+        totalcostlist_optimal.append(totalcost)
         #determine the next system and grid states#
         next_machine_states, next_buffer_states=System.transition_manufacturing()
         next_workingstatus, next_SOC=System.grid.transition()
@@ -715,6 +725,7 @@ if __name__ == "__main__":
                 print(" throughput=", System.machine[i].LastMachineProduction(), file=bmoutput)
                 #accumulate the total throughput#
                 totalthroughput+=System.machine[i].LastMachineProduction()
+                totalthroughputlist_benchmark.append(totalthroughput)
             print("\n", file=bmoutput)
             if i!=number_machines-1:
                 print("Buffer", System.buffer[i].name, "=", System.buffer[i].state, file=bmoutput)
@@ -736,6 +747,7 @@ if __name__ == "__main__":
         print("Average Total Cost=", E, file=bmoutput)
         #accumulate the total cost#
         totalcost+=E
+        totalcostlist_benchmark.append(totalcost)
         #determine the next system and grid states#
         next_machine_states, next_buffer_states=System.transition_manufacturing()
         next_workingstatus, next_SOC=System.grid.transition()
@@ -780,5 +792,26 @@ if __name__ == "__main__":
         #end of the iteration loop for for a benchmark system with initial theta and random actions#
     print("total cost=", totalcost, file=bmoutput)    
     print("total throughput=", totalthroughput, file=bmoutput)    
+    
+    #plot and compare the total cost and the total throughput for optimal control and random control (benchmark)#
+    #plot the total cost#
+    plt.figure(figsize = (14,10))
+    plt.plot(totalcostlist_optimal, color='r')
+    plt.plot(totalcostlist_benchmark, color='b')
+    plt.xlabel('iteration')
+    plt.ylabel('Total cost under optimal policy (red) and benchmark random policy (blue)')
+    plt.savefig('totalcost.png')
+    plt.show()  
+
+    #plot the total throughput#
+    plt.figure(figsize = (14,10))
+    plt.plot(totalthroughputlist_optimal, color='r')
+    plt.plot(totalthroughputlist_benchmark, color='b')
+    plt.xlabel('iteration')
+    plt.ylabel('Total throughput under optimal policy (red) and benchmark random policy (blue)')
+    plt.savefig('totalthroughput.png')
+    plt.show()  
 
 output.close() 
+testoutput.close()
+bmoutput.close()
