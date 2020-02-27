@@ -919,24 +919,33 @@ if __name__ == "__main__":
         if i!=number_machines-1:
             print(System.buffer[i].PrintBuffer())
     print(System.grid.PrintMicrogrid())
-    print("Average Total Cost=", System.average_total_cost())
+    print("Average Total Cost=", System.average_total_cost(), "\n")
     #generate the admissible machine actions from the tree structure#
     machine_action_tree=MachineActionTree(machine_action="ROOT")
     machine_action_tree.BuildTree(System, level=0, tree=machine_action_tree)
     machine_action_list=[]
     machine_action_tree.TraverseTree(level=0, tree=machine_action_tree, machine_action_list=[])
     machine_action_set_list=machine_action_tree.machine_action_set_list
-    print("\nadmissible machine actions=\n", np.array(machine_action_set_list), 
-          "\nnumber of the admissible machine actions=", len(machine_action_set_list))
+    i=1
+    for machine_action_list in machine_action_set_list:
+        print("admissible machine action", i, "=", machine_action_list)
+        i=i+1
     #generate the admissible microgrid actions for adjusting status and purchased/discharged
     microgrid_action_set_DR=MicrogridActionSet_Discrete_Remainder(System)
     microgrid_action_set_list_adjustingstatus=microgrid_action_set_DR.List_AdjustingStatus()
-    print("\nadmissible microgrid actions for adjusting status=\n", np.array(microgrid_action_set_list_adjustingstatus), 
-          "\nnumber of the admissible microgrid actions for adjusting status=", len(microgrid_action_set_list_adjustingstatus))
-    microgrid_action_set_list_purchased_discharged=microgrid_action_set_DR.List_PurchasedDischarged(actions_solar=[0.2,0.8,0],
-                                                                                                    actions_wind=[0,0.2,0.8],
-                                                                                                    actions_generator=[0.4,0.2,0])
-    print("\nadmissible microgrid actions for [purchased, discharged]=\n", np.array(microgrid_action_set_list_purchased_discharged), 
-          "\nnumber of the admissible microgrid actions for [purchased, discharged]=", len(microgrid_action_set_list_purchased_discharged))
-    
-    
+    i=1
+    print("\n")
+    for microgrid_action_list_adjustingstatus in microgrid_action_set_list_adjustingstatus:
+        print("admissible microgrid action", i," for adjusting status=", microgrid_action_list_adjustingstatus)
+        i=i+1
+
+    microgrid_action_set_list_purchased_discharged=microgrid_action_set_DR.List_PurchasedDischarged(actions_solar=[0,0,0],
+                                                                                                    actions_wind=[0,0,0],
+                                                                                                    actions_generator=[0,0,0])
+    i=1
+    print("\n")
+    for microgrid_action_list_purchased_discharged in microgrid_action_set_list_purchased_discharged:
+        print("admissible microgrid action", i," for purchase=", microgrid_action_list_purchased_discharged[0],
+              ", admissible microgrid action", i," for discharge=", microgrid_action_list_purchased_discharged[1])
+        i=i+1
+   
