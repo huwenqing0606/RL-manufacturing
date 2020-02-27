@@ -676,7 +676,7 @@ if __name__ == "__main__":
         
     
     #As benchmark, with initial theta and randomly simulated actions, run the system at a certain time horizon#
-    print("\n*************************BenchMark System with initial theta and random actions*************************")
+    print("\n*************************BenchMark System with initial theta and random actions*************************", file=bmoutput)
     print("***Run the system on random policy at a time horizon=", testing_number_iteration,"***", file=bmoutput)
     print("\n", file=bmoutput)
     print("initial proportion of energy supply=", thetainit, file=bmoutput)
