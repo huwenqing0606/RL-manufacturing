@@ -41,7 +41,7 @@ lr_omega=0.0003
 gamma=0.999
 
 #number of training and testing iterations#
-training_number_iteration=10000
+training_number_iteration=1
 testing_number_iteration=100
 
 """
@@ -333,6 +333,7 @@ if __name__ == "__main__":
     
     #reinforcement learning training process
     for t in range(training_number_iteration):
+        print("------Iteration", t, "------")
         #beginning of the iteration loop for reinforcement learning training process
         #current states and actions S_t and A_t are stored in class System
         print("*********************Time Step", t, "*********************", file=output)
