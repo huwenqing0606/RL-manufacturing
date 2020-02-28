@@ -690,6 +690,7 @@ if __name__ == "__main__":
         #end of the iteration loop for reinforcement learning training process#
     print("total cost=", totalcost, file=testoutput)    
     print("total throughput=", totalthroughput, file=testoutput)    
+    print("total energy demand=", totalenergydemand, file=testoutput)
         
     
     #As benchmark, with initial theta and randomly simulated actions, run the system at a certain time horizon#
@@ -802,9 +803,11 @@ if __name__ == "__main__":
                                    )        
         #end of the iteration loop for for a benchmark system with initial theta and random actions#
     print("total cost=", totalcost, file=bmoutput)    
-    print("total throughput=", totalthroughput, file=bmoutput)    
+    print("total throughput=", totalthroughput, file=bmoutput)   
+    print("total energy demand=", totalenergydemand, file=bmoutput)
     
-    #plot and compare the total cost and the total throughput for optimal control and random control (benchmark)#
+    
+    #plot and compare the total cost, the total throughput and the total energy demand for optimal control and random control (benchmark)#
     #plot the total cost#
     plt.figure(figsize = (14,10))
     plt.plot(totalcostlist_optimal, color='r')
