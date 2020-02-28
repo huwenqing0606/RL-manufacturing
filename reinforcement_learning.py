@@ -41,7 +41,7 @@ lr_omega=0.0003
 gamma=0.999
 
 #number of training and testing iterations#
-training_number_iteration=1
+training_number_iteration=10000
 testing_number_iteration=100
 
 """
@@ -333,7 +333,7 @@ if __name__ == "__main__":
     
     #reinforcement learning training process
     for t in range(training_number_iteration):
-        print("------Iteration", t, "------")
+        print("---------- iteration", t, "----------")
         #beginning of the iteration loop for reinforcement learning training process
         #current states and actions S_t and A_t are stored in class System
         print("*********************Time Step", t, "*********************", file=output)
@@ -502,8 +502,10 @@ if __name__ == "__main__":
     #compare the optimal control and random control (benchmark)#
     totalcostlist_optimal=[0]
     totalthroughputlist_optimal=[0]
+    totalenergydemandlist_optimal=[0]
     totalcostlist_benchmark=[0]
     totalthroughputlist_benchmark=[0]
+    totalenergydemandlist_benchmark=[0]
     
     #with the optimal theta and optimal omega at hand, run the system at a certain time horizon#
     #output the optimal theta and optimal omega#
@@ -542,11 +544,12 @@ if __name__ == "__main__":
     #set the total cost, total throughput and the total energy demand#
     totalcost=0
     totalthroughput=0
-    totalenergydemand=0 #need to specify what exactly is totalenergy demand
+    totalenergydemand=0 
     #reinforcement learning testing loop
     for t in range(testing_number_iteration):
         #start of the iteration loop for reinforcement learning training process#
         #current states and actions S_t and A_t are stored in class System#
+        #Print (S_t, A_t)#
         print("*********************Time Step", t, "*********************", file=testoutput)
         for i in range(number_machines):
             print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action, file=testoutput)
@@ -554,9 +557,6 @@ if __name__ == "__main__":
             if System.machine[i].is_last_machine:
                 print("\n", file=testoutput)
                 print(" throughput=", System.machine[i].LastMachineProduction(), file=testoutput)
-                #accumulate the total throughput#
-                totalthroughput+=System.machine[i].LastMachineProduction()
-                totalthroughputlist_optimal.append(totalthroughput)
             print("\n", file=testoutput)
             if i!=number_machines-1:
                 print("Buffer", System.buffer[i].name, "=", System.buffer[i].state, file=testoutput)
@@ -572,6 +572,9 @@ if __name__ == "__main__":
         print(" Microgrid Energy Consumption=", System.grid.EnergyConsumption(), file=testoutput)
         print(" Microgrid Operational Cost=", System.grid.OperationalCost(), file=testoutput)
         print(" Microgrid SoldBackReward=", System.grid.SoldBackReward(), file=testoutput)
+        #accumulate the total throughput#
+        totalthroughput+=System.throughput()
+        totalthroughputlist_optimal.append(totalthroughput)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
         E=System.average_total_cost()
         print("\n", file=testoutput)
@@ -579,6 +582,9 @@ if __name__ == "__main__":
         #accumulate the total cost#
         totalcost+=E
         totalcostlist_optimal.append(totalcost)
+        #accumulate the total energy demand#
+        totalenergydemand+=System.energydemand()
+        totalenergydemandlist_optimal.append(totalenergydemand)
         #determine the next system and grid states#
         next_machine_states, next_buffer_states=System.transition_manufacturing()
         next_workingstatus, next_SOC=System.grid.transition()
@@ -712,11 +718,12 @@ if __name__ == "__main__":
     #set the total cost, total throughput and the total energy demand#
     totalcost=0
     totalthroughput=0
-    totalenergydemand=0 #need to specify what exactly is totalenergy demand
+    totalenergydemand=0 
     #benchmark system iteration loop
     for t in range(testing_number_iteration):
         #start of the iteration loop for a benchmark system with initial theta and random actions#
         #current states and actions S_t and A_t are stored in class System#
+        #Pring (S_t, A_t)#
         print("*********************Time Step", t, "*********************", file=bmoutput)
         for i in range(number_machines):
             print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action, file=bmoutput)
@@ -724,9 +731,6 @@ if __name__ == "__main__":
             if System.machine[i].is_last_machine:
                 print("\n", file=bmoutput)
                 print(" throughput=", System.machine[i].LastMachineProduction(), file=bmoutput)
-                #accumulate the total throughput#
-                totalthroughput+=System.machine[i].LastMachineProduction()
-                totalthroughputlist_benchmark.append(totalthroughput)
             print("\n", file=bmoutput)
             if i!=number_machines-1:
                 print("Buffer", System.buffer[i].name, "=", System.buffer[i].state, file=bmoutput)
@@ -742,6 +746,9 @@ if __name__ == "__main__":
         print(" Microgrid Energy Consumption=", System.grid.EnergyConsumption(), file=bmoutput)
         print(" Microgrid Operational Cost=", System.grid.OperationalCost(), file=bmoutput)
         print(" Microgrid SoldBackReward=", System.grid.SoldBackReward(), file=bmoutput)
+        #accumulate the total throughput#
+        totalthroughput+=System.throughput()
+        totalthroughputlist_benchmark.append(totalthroughput)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
         E=System.average_total_cost()
         print("\n", file=bmoutput)
@@ -749,6 +756,9 @@ if __name__ == "__main__":
         #accumulate the total cost#
         totalcost+=E
         totalcostlist_benchmark.append(totalcost)
+        #accumulate the total energy demand#
+        totalenergydemand+=System.energydemand()
+        totalenergydemandlist_benchmark.append(totalenergydemand)
         #determine the next system and grid states#
         next_machine_states, next_buffer_states=System.transition_manufacturing()
         next_workingstatus, next_SOC=System.grid.transition()
@@ -801,7 +811,7 @@ if __name__ == "__main__":
     plt.plot(totalcostlist_benchmark, color='b')
     plt.xlabel('iteration')
     plt.ylabel('total cost')
-    plt.title('Evolution of the total cost under optimal policy (red) and benchmark random policy (blue)')
+    plt.title('Total cost under optimal policy (red) and benchmark random policy (blue)')
     plt.savefig('totalcost.png')
     plt.show()  
 
@@ -811,10 +821,20 @@ if __name__ == "__main__":
     plt.plot(totalthroughputlist_benchmark, color='b')
     plt.xlabel('iteration')
     plt.ylabel('total throughput')
-    plt.title('Evolution of the total throughput under optimal policy (red) and benchmark random policy (blue)')
+    plt.title('Total throughput under optimal policy (red) and benchmark random policy (blue)')
     plt.savefig('totalthroughput.png')
     plt.show()  
 
+    #plot the total energy demand#
+    plt.figure(figsize = (14,10))
+    plt.plot(totalenergydemandlist_optimal, color='r')
+    plt.plot(totalenergydemandlist_benchmark, color='b')
+    plt.xlabel('iteration')
+    plt.ylabel('total energy demand')
+    plt.title('Total energy demand under optimal policy (red) and benchmark random policy (blue)')
+    plt.savefig('totalenergydemand.png')
+    plt.show()  
+    
 output.close() 
 testoutput.close()
 bmoutput.close()

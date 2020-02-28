@@ -540,6 +540,22 @@ class ManufacturingSystem(object):
         #the sold back reward#
         SB=self.grid.SoldBackReward()
         return TF+MC-TP-SB
+    
+    def energydemand(self):
+        #calculate the total energy demand TF of the system, based on the current machine, buffer, microgrid states and actions#
+        E_mfg=0
+        #total energy consumed by the manufacturing system, summing over all machines#
+        for i in range(number_machines):
+            E_mfg=E_mfg+self.machine[i].EnergyConsumption()
+        #the energy consumption cost#            
+        TF=(E_mfg+self.grid.EnergyConsumption())*rate_consumption_charge
+        return TF
+    
+    def throughput(self):
+        #calculate total throughput TP of the manufacturing system, based on the current machine, buffer, microgrid states and actions#
+        #the prduction throughput of the manufacturing system#
+        TP=self.machine[number_machines-1].LastMachineProduction()*unit_reward_production
+        return TP        
 
 
 
