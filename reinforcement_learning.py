@@ -799,7 +799,8 @@ if __name__ == "__main__":
     plt.plot(totalcostlist_optimal, color='r')
     plt.plot(totalcostlist_benchmark, color='b')
     plt.xlabel('iteration')
-    plt.ylabel('Total cost under optimal policy (red) and benchmark random policy (blue)')
+    plt.ylabel('total cost')
+    plt.title('Evolution of the total cost under optimal policy (red) and benchmark random policy (blue)')
     plt.savefig('totalcost.png')
     plt.show()  
 
@@ -808,7 +809,8 @@ if __name__ == "__main__":
     plt.plot(totalthroughputlist_optimal, color='r')
     plt.plot(totalthroughputlist_benchmark, color='b')
     plt.xlabel('iteration')
-    plt.ylabel('Total throughput under optimal policy (red) and benchmark random policy (blue)')
+    plt.ylabel('total throughput')
+    plt.title('Evolution of the total throughput under optimal policy (red) and benchmark random policy (blue)')
     plt.savefig('totalthroughput.png')
     plt.show()  
 
