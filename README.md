@@ -1,5 +1,7 @@
 # RL-manufacturing
-Source code for reinforcement learning algorithms applied to joint control of manufacturing and onsite microgrid system. The main files are 
+Source code for reinforcement learning algorithms applied to joint control of manufacturing and onsite microgrid system. 
+
+<i>The main files are </i>
 
 1. microgrid_manufacturing_system.py 
 
@@ -13,7 +15,7 @@ reinforcement learning via two layer fully connected neural network
 
 Learn the microgrid-manufacturing system using pure Q-learning. This is to compare with our new method
 
-The auxiliary files are 
+<i>The auxiliary files are </i>
 
 4. reinforcement_learning_linearQ.py
 
