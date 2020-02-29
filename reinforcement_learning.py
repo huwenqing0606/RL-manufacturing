@@ -810,31 +810,31 @@ if __name__ == "__main__":
     #plot and compare the total cost, the total throughput and the total energy demand for optimal control and random control (benchmark)#
     #plot the total cost#
     plt.figure(figsize = (14,10))
-    plt.plot(totalcostlist_optimal, color='r')
-    plt.plot(totalcostlist_benchmark, color='b')
+    plt.plot(totalcostlist_optimal, '-', color='r')
+    plt.plot(totalcostlist_benchmark, '--', color='b')
     plt.xlabel('iteration')
     plt.ylabel('total cost')
-    plt.title('Total cost under optimal policy (red) and benchmark random policy (blue)')
+    plt.title('Total cost under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
     plt.savefig('totalcost.png')
     plt.show()  
 
     #plot the total throughput#
     plt.figure(figsize = (14,10))
-    plt.plot(totalthroughputlist_optimal, color='r')
-    plt.plot(totalthroughputlist_benchmark, color='b')
+    plt.plot(totalthroughputlist_optimal, '-', color='r')
+    plt.plot(totalthroughputlist_benchmark, '--', color='b')
     plt.xlabel('iteration')
     plt.ylabel('total throughput')
-    plt.title('Total throughput under optimal policy (red) and benchmark random policy (blue)')
+    plt.title('Total throughput under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
     plt.savefig('totalthroughput.png')
     plt.show()  
 
     #plot the total energy demand#
     plt.figure(figsize = (14,10))
-    plt.plot(totalenergydemandlist_optimal, color='r')
-    plt.plot(totalenergydemandlist_benchmark, color='b')
+    plt.plot(totalenergydemandlist_optimal, '-', color='r')
+    plt.plot(totalenergydemandlist_benchmark, '--', color='b')
     plt.xlabel('iteration')
     plt.ylabel('total energy demand')
-    plt.title('Total energy demand under optimal policy (red) and benchmark random policy (blue)')
+    plt.title('Total energy demand under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
     plt.savefig('totalenergydemand.png')
     plt.show()  
     
