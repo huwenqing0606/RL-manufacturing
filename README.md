@@ -25,5 +25,7 @@ reinforcement learning via linear Q-function
 
 proximal operator to the simplex D^c={(x_1, x_2), 0\leq x_i\leq 1, x_1+x_2\leq 1}.
 
+6. linear_programming_routine_strategy.py
 
+routine strategy via linear programming
 
