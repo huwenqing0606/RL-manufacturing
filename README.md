@@ -17,7 +17,7 @@ Learn the microgrid-manufacturing system using pure Q-learning. This is to compa
 
 4. Simple_Manufacturing_System_routine_strategy.py
 
-routine strategy via linear programming
+Learn the microgrid-manufacturing system using routine strategy via linear mixed-integer programming
 
 <i>The auxiliary files are </i>
 
