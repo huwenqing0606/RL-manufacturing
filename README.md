@@ -25,7 +25,7 @@ The auxiliary files are
 
 proximal operator to the simplex D^c={(x_1, x_2), 0\leq x_i\leq 1, x_1+x_2\leq 1}.
 
-6. <b>Solarirradiance.csv, windspeed.csv, rate_consumption_charge.csv</b>
+6. <b>SolarIrradiance.csv, WindSpeed.csv, rate_consumption_charge.csv</b>
 
-data for solar irradiance, windspeed and rate of consumption charge.
+data for solar irradiance, wind speed and rate of consumption charge.
 
