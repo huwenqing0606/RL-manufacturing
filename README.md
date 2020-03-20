@@ -27,5 +27,5 @@ proximal operator to the simplex D^c={(x_1, x_2), 0\leq x_i\leq 1, x_1+x_2\leq 1
 
 6. <b>SolarIrradiance.csv, WindSpeed.csv, rate_consumption_charge.csv</b>
 
-1 year data in 8640 hours for solar irradiance, wind speed and rate of consumption charge.
+1 year data in 8640 hours (360 days * 24 hours) for solar irradiance, wind speed and rate of consumption charge.
 
