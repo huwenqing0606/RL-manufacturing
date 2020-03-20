@@ -5,19 +5,19 @@ The main files are
 
 1. <b>microgrid_manufacturing_system.py</b>
 
-simulates the joint operation of microgrid and manufacturing system
+simulates the joint operation of microgrid and manufacturing system.
 
 2. <b>reinforcement_learning.py</b>
 
-reinforcement learning via two layer fully connected neural network
+reinforcement learning via two layer fully connected neural network.
 
 3. <b>Simple_Manufacturing_System-Pure_Q-Learning.py</b>
 
-Learn the microgrid-manufacturing system using pure Q-learning. This is to compare with our new method
+Learn the microgrid-manufacturing system using pure Q-learning. This is to compare with our new method.
 
 4. <b>Simple_Manufacturing_System_routine_strategy.py</b>
 
-Learn the microgrid-manufacturing system using routine strategy via linear mixed-integer programming
+Learn the microgrid-manufacturing system using routine strategy via linear mixed-integer programming.
 
 The auxiliary files are
 
