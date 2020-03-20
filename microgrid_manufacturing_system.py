@@ -14,79 +14,94 @@ Set up all parameters that are constant throughout the system
 """
 Delta_t=1
 #the actual time measured in one decision epoch unit, in hours#
-unit_reward_production=5/100
+unit_reward_production=5
 #the unit reward for each unit of production, i.e. the r^p, this applies to the end of the machine sequence#
-cutin_windspeed=3/100
-#the cut-in windspeed (m/s), v^ci#
-cutoff_windspeed=11/100
-#the cut-off windspeed (m/s), v^co#
-rated_windspeed=7/100
-#the rated windspeed (m/s), v^r#
-charging_discharging_efficiency=0.95/100
+cutin_windspeed=3/1000
+#the cut-in windspeed (km/s), v^ci#
+cutoff_windspeed=11/1000
+#the cut-off windspeed (km/s), v^co#
+rated_windspeed=7/1000
+#the rated windspeed (km/s), v^r#
+charging_discharging_efficiency=0.95
 #the charging-discharging efficiency, eta#
-rate_battery_discharge=2/100
+rate_battery_discharge=2/1000
 #the rate for discharging the battery, b#
-rate_consumption_charge=0.25/100
-#the rate of consumption charge, r^c#
-unit_operational_cost_solar=0.17/100
+unit_operational_cost_solar=0.17/10
 #the unit operational and maintanance cost for generating power from solar PV, r_omc^s#
-unit_operational_cost_wind=0.08/100
+unit_operational_cost_wind=0.08/10
 #the unit operational and maintanance cost for generating power from wind turbine, r_omc^w#
-unit_operational_cost_generator=0.45/100
+unit_operational_cost_generator=0.45/10
 #the unit opeartional and maintanance cost for generating power from generator, r_omc^g#
-unit_operational_cost_battery=0.9/100
+unit_operational_cost_battery=0.9/10
 #the unit operational and maintanance cost for battery storage system per unit charging/discharging cycle, r_omc^b#
-capacity_battery_storage=20/100
+capacity_battery_storage=350/1000
 #the capacity of battery storage system, e#
-SOC_max=0.95*2.71828*100000000000
+SOC_max=0.95*capacity_battery_storage#*10000000000000000000
 #the maximum state of charge of battery system#
-SOC_min=0.05*2.71828/100
+SOC_min=0.05*capacity_battery_storage
 #the minimum state of charge of battery system#
-area_solarPV=14000/100
+area_solarPV=1400/(1000*1000)
 #the area of the solar PV system, a#
-efficiency_solarPV=0.2/100
+efficiency_solarPV=0.2
 #the efficiency of the solar PV system, delta#
-density_of_air=1.225/100
+density_of_air=1.225
 #calculate the rated power of the wind turbine, density of air, rho#
-radius_wind_turbine_blade=25/100
+radius_wind_turbine_blade=25/1000
 #calculate the rated power of the wind turbine, radius of the wind turbine blade, r#
-average_wind_speed=0.25/100
-#calculate the rated power of the wind turbine, average wind speed, v_avg#
-power_coefficient=0.593/100
+average_wind_speed=3.952/1000
+#calculate the rated power of the wind turbine, average wind speed, v_avg (from the windspeed table)#
+power_coefficient=0.593
 #calculate the rated power of the wind turbine, power coefficient, theta#
-gearbox_transmission_efficiency=0.9/100
+gearbox_transmission_efficiency=0.9
 #calculate the rated power of the wind turbine, gearbox transmission efficiency, eta_t#
-electrical_generator_efficiency=0.9/100
+electrical_generator_efficiency=0.9
 #calculate the rated power of the wind turbine, electrical generator efficiency, eta_g#
-rated_power_wind_turbine=878.1101/100
-#rated_power_wind_turbine=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radius_wind_turbine_blade*average_wind_speed*average_wind_speed*average_wind_speed*power_coefficient*gearbox_transmission_efficiency*electrical_generator_efficiency/1000
+#rated_power_wind_turbine=878.1101
+rated_power_wind_turbine=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radius_wind_turbine_blade*average_wind_speed*average_wind_speed*average_wind_speed*power_coefficient*gearbox_transmission_efficiency*electrical_generator_efficiency
 #the rated power of the wind turbine, RP_w#
-number_windturbine=1/100
+number_windturbine=1
 #the number of wind turbine in the onsite generation system, N_w#
-number_generators=1/100
+number_generators=1
 #the number of generators, n_g#
-rated_output_power_generator=650/100
+rated_output_power_generator=65/1000
 #the rated output power of the generator, G_p#
-unit_reward_production=5/100
+unit_reward_production=5/10000
 #unit reward for each unit of production, r^p#
-unit_reward_soldbackenergy=0.2/100
+unit_reward_soldbackenergy=0.2/10
 #the unit reward from sold back energy, r^sb#
 number_machines=5
 #the total number of machines in the manufacturing system, total number of buffers=number_machines-1#
+machine_lifetime_scale_parameter=[111.39/60, 51.1/60, 110.9/60, 239.1/60, 112.1/60]
+#the set of machine lifetime scale parameters, size=number_machines#
+machine_lifetime_shape_parameter=[1.5766, 1.6532, 1.7174, 1.421, 1.591]
+#the set of machine lifetime shape parameters, size=number_machines#
+machine_repairtime_mean=[4.95/60, 11.7/60, 15.97/60, 27.28/60, 18.37/60]
+#the set of machine repairtime mean parameters, size=number_machines#
+machine_power_consumption_Opr=[11.55/100, 11.55/100, 11.55/100, 17.05/100, 13.2/100]
+#the set of amount of power drawn by the machine if the machine state is Opr (Operating), size=number_machines#
+machine_power_consumption_Idl=[10.5/100, 10.5/100, 10.5/100, 15.5/100, 12/100]
+#the set of amount of power drawn by the machine if the machine state is Sta (Starvation) or Blo (Blockage), both are Idl (Idle) states, size=number_machines#
+list_buffer_max=[4, 4, 4, 4]
+list_buffer_min=[0, 0, 0, 0]
+#the maximum and minumum of buffers, size=number_machine-1#
 
 
 
 import pandas as pd
 #read the solar irradiance and wind speed data from file#
+#read the rate of consumption charge date from file#
 file_SolarIrradiance = "SolarIrradiance.csv"
 file_WindSpeed = "WindSpeed.csv"
+file_rateConsumptionCharge = "rate_consumption_charge.csv"
 
 data_solar = pd.read_csv(file_SolarIrradiance)
 solarirradiance = np.array(data_solar.iloc[:,3])
 
 data_wind = pd.read_csv(file_WindSpeed)
-windspeed = np.array(data_wind.iloc[:,3])
+windspeed = np.array(data_wind.iloc[:,3])/1000
 
+data_rate_consumption_charge = pd.read_csv(file_rateConsumptionCharge)
+rate_consumption_charge = np.array(data_rate_consumption_charge.iloc[:,4])/10
 
 
 """
@@ -99,15 +114,15 @@ class Machine(object):
     def __init__(self,
                  name=1,
                  #the label of this machine#
-                 lifetime_shape_parameter=1.5, 
+                 lifetime_shape_parameter=0, 
                  #random lifetime of machine follows Weibull distribution with shape parameter lifetime_shape_parameter
-                 lifetime_scale_parameter=100/60,
+                 lifetime_scale_parameter=0,
                  #random lifetime of machine follows Weibull distribution with scale parameter lifetime_scale_parameter
-                 repairtime_mean=15/60,
+                 repairtime_mean=0,
                  #random repair time of machine follows exponential distribution with mean repairtime_mean
-                 power_consumption_Opr=115/100,
+                 power_consumption_Opr=0,
                  #amount of power drawn by the machine if the machine state is Opr (Operating)
-                 power_consumption_Idl=105/100,
+                 power_consumption_Idl=0,
                  #amount of power drawn by the machine if the machine state is Sta (Starvation) or Blo (Blockage), both are Idl (Idle) states
                  state="OFF",
                  #machine state can be "Opr" (Operating), "Blo" (Blockage), "Sta" (Starvation), "Off", "Brk" (Break)
@@ -211,7 +226,7 @@ class Buffer(object):
                  #the label of this buffer#
                  state=0,
                  #the buffer state is an integer from buffer_min (=0) to buffer_max 
-                 buffer_max=4, 
+                 buffer_max=0, 
                  #the maximal capacity of the buffer#
                  buffer_min=0,
                  #the minimal capacity of the buffer is zero#
@@ -403,7 +418,6 @@ class Microgrid(object):
         return " "
 
 
-
 """    
 Combining the above three classes, define the variables and functions for the whole manufacturing system
 """
@@ -437,11 +451,21 @@ class ManufacturingSystem(object):
             if i!=number_machines-1:
                 self.machine.append(Machine(name=i+1, 
                                             state=self.machine_states[i], 
+                                            lifetime_shape_parameter=machine_lifetime_shape_parameter[i],
+                                            lifetime_scale_parameter=machine_lifetime_scale_parameter[i],
+                                            repairtime_mean=machine_repairtime_mean[i],
+                                            power_consumption_Opr=machine_power_consumption_Opr[i],
+                                            power_consumption_Idl=machine_power_consumption_Idl[i],                                            
                                             control_action=self.machine_control_actions[i], 
                                             is_last_machine=False))
             else:
                 self.machine.append(Machine(name=i+1, 
                                             state=self.machine_states[i], 
+                                            lifetime_shape_parameter=machine_lifetime_shape_parameter[i],
+                                            lifetime_scale_parameter=machine_lifetime_scale_parameter[i],
+                                            repairtime_mean=machine_repairtime_mean[i],
+                                            power_consumption_Opr=machine_power_consumption_Opr[i],
+                                            power_consumption_Idl=machine_power_consumption_Idl[i],                                            
                                             control_action=self.machine_control_actions[i], 
                                             is_last_machine=True))
         #initialize all buffers, ManufacturingSystem.buffer=[Buffer1, Buffer2, ..., Buffer_{numbers_machines-1}]
@@ -449,6 +473,8 @@ class ManufacturingSystem(object):
         for j in range(number_machines-1):
             self.buffer.append(Buffer(name=j+1, 
                                       state=self.buffer_states[j], 
+                                      buffer_max=list_buffer_max[j],
+                                      buffer_min=list_buffer_min[j],
                                       previous_machine_state=self.machine[j].state, 
                                       next_machine_state=self.machine[j+1].state,
                                       previous_machine_control_action=self.machine[j].control_action,
@@ -525,14 +551,14 @@ class ManufacturingSystem(object):
         #return the new states#
         return machine_states, buffer_states
 
-    def average_total_cost(self):
+    def average_total_cost(self, current_rate_consumption_charge):
         #calculate the average total cost of the manufacturing system, E(S,A), based on the current machine, buffer, microgrid states and actions#
         E_mfg=0
         #total energy consumed by the manufacturing system, summing over all machines#
         for i in range(number_machines):
             E_mfg=E_mfg+self.machine[i].EnergyConsumption()
         #the energy consumption cost#            
-        TF=(E_mfg+self.grid.EnergyConsumption())*rate_consumption_charge
+        TF=(E_mfg+self.grid.EnergyConsumption())*current_rate_consumption_charge
         #the operational cost for the microgrid system#
         MC=self.grid.OperationalCost()
         #the prduction throughput of the manufacturing system#
@@ -541,14 +567,14 @@ class ManufacturingSystem(object):
         SB=self.grid.SoldBackReward()
         return TF+MC-TP-SB
     
-    def energydemand(self):
+    def energydemand(self, current_rate_consumption_charge):
         #calculate the total energy demand TF of the system, based on the current machine, buffer, microgrid states and actions#
         E_mfg=0
         #total energy consumed by the manufacturing system, summing over all machines#
         for i in range(number_machines):
             E_mfg=E_mfg+self.machine[i].EnergyConsumption()
         #the energy consumption cost#            
-        TF=(E_mfg+self.grid.EnergyConsumption())*rate_consumption_charge
+        TF=(E_mfg+self.grid.EnergyConsumption())*current_rate_consumption_charge
         return TF
     
     def throughput(self):
@@ -881,7 +907,7 @@ if __name__ == "__main__":
             if i!=number_machines-1:
                 print(System.buffer[i].PrintBuffer())
         print(System.grid.PrintMicrogrid())
-        print("Average Total Cost=", System.average_total_cost())
+        print("Average Total Cost=", System.average_total_cost(rate_consumption_charge[t//8640]))
         #update the theta#
         theta=projection(np.random.uniform(-1,1,size=6))
         #calculate the next states and actions, S_{t+1}, A_{t+1}#        
@@ -935,7 +961,7 @@ if __name__ == "__main__":
         if i!=number_machines-1:
             print(System.buffer[i].PrintBuffer())
     print(System.grid.PrintMicrogrid())
-    print("Average Total Cost=", System.average_total_cost(), "\n")
+    print("Average Total Cost=", System.average_total_cost(rate_consumption_charge[t//8640]), "\n")
     #generate the admissible machine actions from the tree structure#
     machine_action_tree=MachineActionTree(machine_action="ROOT")
     machine_action_tree.BuildTree(System, level=0, tree=machine_action_tree)

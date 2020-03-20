@@ -25,12 +25,16 @@ import pandas as pd
 #read the solar irradiance and wind speed data from file#
 file_SolarIrradiance = "SolarIrradiance.csv"
 file_WindSpeed = "WindSpeed.csv"
+file_rateConsumptionCharge = "rate_consumption_charge.csv"
 
 data_solar = pd.read_csv(file_SolarIrradiance)
 solarirradiance = np.array(data_solar.iloc[:,3])
 
 data_wind = pd.read_csv(file_WindSpeed)
-windspeed = np.array(data_wind.iloc[:,3])
+windspeed = np.array(data_wind.iloc[:,3])/1000
+
+data_rate_consumption_charge = pd.read_csv(file_rateConsumptionCharge)
+rate_consumption_charge = np.array(data_rate_consumption_charge.iloc[:,4])/10
 
 
 #the learning rates for the theta and omega iterations#
@@ -359,7 +363,7 @@ if __name__ == "__main__":
         print(" Microgrid Operational Cost=", System.grid.OperationalCost(), file=output)
         print(" Microgrid SoldBackReward=", System.grid.SoldBackReward(), file=output)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)
-        E=System.average_total_cost()
+        E=System.average_total_cost(rate_consumption_charge[t//8640])
         print(" ", file=output)
         print("Average Total Cost=", E, file=output)
         #calculate the old Q-value and its gradient wrt omega: Q(S_t, A_t; omega_t) and grad_omega Q(S_t, A_t; omega_t)
@@ -576,14 +580,14 @@ if __name__ == "__main__":
         totalthroughput+=System.throughput()
         totalthroughputlist_optimal.append(totalthroughput)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
-        E=System.average_total_cost()
+        E=System.average_total_cost(rate_consumption_charge[t//8640])
         print("\n", file=testoutput)
         print("Average Total Cost=", E, file=testoutput)
         #accumulate the total cost#
         totalcost+=E
         totalcostlist_optimal.append(totalcost)
         #accumulate the total energy demand#
-        totalenergydemand+=System.energydemand()
+        totalenergydemand+=System.energydemand(rate_consumption_charge[t//8640])
         totalenergydemandlist_optimal.append(totalenergydemand)
         #determine the next system and grid states#
         next_machine_states, next_buffer_states=System.transition_manufacturing()
@@ -751,14 +755,14 @@ if __name__ == "__main__":
         totalthroughput+=System.throughput()
         totalthroughputlist_benchmark.append(totalthroughput)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
-        E=System.average_total_cost()
+        E=System.average_total_cost(rate_consumption_charge[t//8640])
         print("\n", file=bmoutput)
         print("Average Total Cost=", E, file=bmoutput)
         #accumulate the total cost#
         totalcost+=E
         totalcostlist_benchmark.append(totalcost)
         #accumulate the total energy demand#
-        totalenergydemand+=System.energydemand()
+        totalenergydemand+=System.energydemand(rate_consumption_charge[t//8640])
         totalenergydemandlist_benchmark.append(totalenergydemand)
         #determine the next system and grid states#
         next_machine_states, next_buffer_states=System.transition_manufacturing()
