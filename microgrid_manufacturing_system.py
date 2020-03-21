@@ -34,9 +34,9 @@ unit_operational_cost_generator=0.45/10
 #the unit opeartional and maintanance cost for generating power from generator, r_omc^g#
 unit_operational_cost_battery=0.9/10
 #the unit operational and maintanance cost for battery storage system per unit charging/discharging cycle, r_omc^b#
-capacity_battery_storage=350/1000
+capacity_battery_storage=2*350/1000
 #the capacity of battery storage system, e#
-SOC_max=0.95*capacity_battery_storage#*10000000000000000000
+SOC_max=0.95*capacity_battery_storage
 #the maximum state of charge of battery system#
 SOC_min=0.05*capacity_battery_storage
 #the minimum state of charge of battery system#
