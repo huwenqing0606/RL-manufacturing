@@ -14,8 +14,6 @@ Set up all parameters that are constant throughout the system
 """
 Delta_t=1
 #the actual time measured in one decision epoch unit, in hours#
-unit_reward_production=5
-#the unit reward for each unit of production, i.e. the r^p, this applies to the end of the machine sequence#
 cutin_windspeed=3/1000
 #the cut-in windspeed (km/s), v^ci#
 cutoff_windspeed=11/1000
@@ -65,8 +63,8 @@ number_generators=1
 #the number of generators, n_g#
 rated_output_power_generator=65/1000
 #the rated output power of the generator, G_p#
-unit_reward_production=5/10000
-#unit reward for each unit of production, r^p#
+unit_reward_production=5/100
+#the unit reward for each unit of production, i.e. the r^p, this applies to the end of the machine sequence#
 unit_reward_soldbackenergy=0.2/10
 #the unit reward from sold back energy, r^sb#
 number_machines=5
@@ -165,7 +163,7 @@ class Machine(object):
                 throughput=0
         else:
             throughput=0
-        return throughput*self.unit_reward_production
+        return throughput
     
     def NextState_IsOff(self):
         #Based on the current state of the machine, determine if the state of the machine at next decision epoch is "Off"#
@@ -893,13 +891,14 @@ if __name__ == "__main__":
                    solarirradiance=0,
                    windspeed=0
                    )
-    System=ManufacturingSystem(machine_states=["Off" for _ in range(number_machines)],
+    System=ManufacturingSystem(machine_states=["Opr" for _ in range(number_machines)],
                                machine_control_actions=["K" for _ in range(number_machines)],
-                               buffer_states=[0 for _ in range(number_machines-1)],
+                               buffer_states=[2 for _ in range(number_machines-1)],
                                grid=grid
                                )
     theta=[0,0,0,0,0,0]
-    for t in range(10):
+    targetoutput=0
+    for t in range(100):
         #current states and actions S_t and A_t are stored in class System#
         print("*********************Time Step", t, "*********************")
         for i in range(number_machines):
@@ -908,6 +907,7 @@ if __name__ == "__main__":
                 print(System.buffer[i].PrintBuffer())
         print(System.grid.PrintMicrogrid())
         print("Average Total Cost=", System.average_total_cost(rate_consumption_charge[t//8640]))
+        targetoutput+=int(System.throughput()/unit_reward_production)
         #update the theta#
         theta=projection(np.random.uniform(-1,1,size=6))
         #calculate the next states and actions, S_{t+1}, A_{t+1}#        
@@ -991,3 +991,4 @@ if __name__ == "__main__":
               ", admissible microgrid action", i," for discharge=", microgrid_action_list_purchased_discharged[1])
         i=i+1
    
+    print("\nTarget Output = ", targetoutput)

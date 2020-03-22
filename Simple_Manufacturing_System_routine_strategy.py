@@ -183,5 +183,5 @@ def Mixed_Integer_Program(target_output):
 
 #set the optimal production matrx which is a 0-1 matrix, rows=number_machines, columns=testing_number_iteration
 if __name__=="__main__":
-    x=Mixed_Integer_Program(2)
+    x=Mixed_Integer_Program(5)
     print("optimal solution is ", x.T)
