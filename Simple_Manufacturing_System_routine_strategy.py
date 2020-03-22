@@ -181,7 +181,41 @@ def Mixed_Integer_Program(target_output):
     return prod_mat
 
 
-#set the optimal production matrx which is a 0-1 matrix, rows=number_machines, columns=testing_number_iteration
+
+
+
+"""
+Testing for the Routine Strategy Selected by Mixed Integer Programming at Given Horizon
+"""
+def RoutineStrategy_Testing(number_iteration, #the number of testing iterations
+                            target_output     #the target output
+                            ):
+    
+    #open and output the results to the file routine_output.txt
+    rtoutput = open('routine_output.txt', 'w')
+
+    #Calculate and output the total cost, total throughput and total energy demand for mixed-integer programming with target output as the one given by the optimal strategy
+    print("\n************************* Mixed Integer Programming with given Target Output *************************", file=rtoutput)
+    print("***Run the system on routine policy by mixed-integer programming at a time horizon=", number_iteration,"***", file=rtoutput)
+    target_output=int(target_output)
+    print("Target Output =", target_output, file=rtoutput)
+    routine_sol=Mixed_Integer_Program(target_output)
+    print("Optimal solution from mixed-integer programming is given by \n", routine_sol.T, file=rtoutput)
+
+    #close and save the results to the file
+    rtoutput.close()
+
+    return 0
+
+
+
+"""
+######################## MAIN TESTING FILE ##############################
+######################## FOR DEBUGGING ONLY #############################
+
+"""
+
 if __name__=="__main__":
-    x=Mixed_Integer_Program(5)
+    #set the optimal production matrx which is a 0-1 matrix, rows=number_machines, columns=testing_number_iteration
+    x=Mixed_Integer_Program(20)
     print("optimal solution is ", x.T)

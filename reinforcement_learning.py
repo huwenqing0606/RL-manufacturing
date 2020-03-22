@@ -14,11 +14,12 @@ import math
 #import tensorflow.keras.backend as K
 
 
+
+
 #set the number of machines
 number_machines=5
 #set the unit reward of production
-unit_reward_production=5/100
-
+unit_reward_production=5/1000
 
 import pandas as pd
 #read the solar irradiance, wind speed and the rate of consumption charge data from file#
@@ -28,13 +29,12 @@ file_rateConsumptionCharge = "rate_consumption_charge.csv"
 
 data_solar = pd.read_csv(file_SolarIrradiance)
 solarirradiance = np.array(data_solar.iloc[:,3])
-
+    
 data_wind = pd.read_csv(file_WindSpeed)
 windspeed = np.array(data_wind.iloc[:,3])/1000
 
 data_rate_consumption_charge = pd.read_csv(file_rateConsumptionCharge)
 rate_consumption_charge = np.array(data_rate_consumption_charge.iloc[:,4])/10
-
 
 #the initial learning rates for the theta and omega iterations#
 lr_theta_initial=0.003
@@ -44,9 +44,8 @@ lr_omega_initial=0.0003
 gamma=0.999
 
 #number of training and testing iterations#
-training_number_iteration=10
+training_number_iteration=100
 testing_number_iteration=100
-
 
 
 
@@ -656,6 +655,11 @@ def Reinforcement_Learning_Testing(System_init, #the initial point of the system
                                    grid=grid
                                    )        
         #end of the iteration loop for reinforcement learning training process#
+
+    print("total cost list=", totalcostlist_optimal, file=testoutput)
+    print("total throughput list=", totalthroughputlist_optimal, file=testoutput)
+    print("total energy demand list=", totalenergydemandlist_optimal, file=testoutput)
+
     print("total cost=", totalcost, file=testoutput)    
     print("total throughput=", totalthroughput, file=testoutput)    
     print("total energy demand=", totalenergydemand, file=testoutput)
@@ -787,6 +791,11 @@ def Benchmark_RandomAction_Testing(System_init, #the inital point of running the
                                    grid=grid
                                    )        
         #end of the iteration loop for for a benchmark system with initial theta and random actions#
+    
+    print("total cost list=", totalcostlist_benchmark, file=bmoutput)
+    print("total throughput list=", totalthroughputlist_benchmark, file=bmoutput)
+    print("total energy demand list=", totalenergydemandlist_benchmark, file=bmoutput)
+    
     print("total cost=", totalcost, file=bmoutput)    
     print("total throughput=", totalthroughput, file=bmoutput)   
     print("total energy demand=", totalenergydemand, file=bmoutput)
@@ -802,6 +811,7 @@ def Benchmark_RandomAction_Testing(System_init, #the inital point of running the
 
 """
 ################################ MAIN TESTING FILE #####################################
+################################ FOR DEBUGGING ONLY #####################################
 
 Testing the Reinforcement Learning Algorithm: Off policy TD control combined with actor-critique
 Algorithm 1 in the paper

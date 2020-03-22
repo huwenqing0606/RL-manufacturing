@@ -63,7 +63,7 @@ number_generators=1
 #the number of generators, n_g#
 rated_output_power_generator=65/1000
 #the rated output power of the generator, G_p#
-unit_reward_production=5/100
+unit_reward_production=5/1000
 #the unit reward for each unit of production, i.e. the r^p, this applies to the end of the machine sequence#
 unit_reward_soldbackenergy=0.2/10
 #the unit reward from sold back energy, r^sb#
@@ -877,7 +877,11 @@ class MachineActionTree(object):
 
 
 """
+################################ MAIN TESTING FILE #####################################
+################################ FOR DEBUGGING ONLY #####################################
+
 testing on random admissible actions
+testing on the generation of admissible actions
 """
 if __name__ == "__main__":
     grid=Microgrid(workingstatus=[0,0,0],
