@@ -300,6 +300,7 @@ def Reinforcement_Learning_Training(System_init, #the initial system
                                     ):
     
     tf.enable_eager_execution()
+    tf.set_random_seed(0) #set seed for tensorflow (including initialization of weights and bias) for reproducability
     #K.clear_session()
 
     #initialize#
