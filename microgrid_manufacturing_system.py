@@ -23,38 +23,37 @@ rated_windspeed=7/1000
 charging_discharging_efficiency=0.95
 #the charging-discharging efficiency, eta#
 rate_battery_discharge=2/1000
-#the rate for discharging the battery, b#
+#the rate for discharging the battery (MegaWatt), b#
 unit_operational_cost_solar=0.17/10
-#the unit operational and maintanance cost for generating power from solar PV, r_omc^s#
+#the unit operational and maintanance cost for generating power from solar PV (10^4$/MegaWatt), r_omc^s#
 unit_operational_cost_wind=0.08/10
-#the unit operational and maintanance cost for generating power from wind turbine, r_omc^w#
+#the unit operational and maintanance cost for generating power from wind turbine (10^4$/MegaWatt), r_omc^w#
 unit_operational_cost_generator=0.45/10
-#the unit opeartional and maintanance cost for generating power from generator, r_omc^g#
+#the unit opeartional and maintanance cost for generating power from generator (10^4$/MegaWatt), r_omc^g#
 unit_operational_cost_battery=0.9/10
-#the unit operational and maintanance cost for battery storage system per unit charging/discharging cycle, r_omc^b#
+#the unit operational and maintanance cost for battery storage system per unit charging/discharging cycle (10^4$/MegaWatt), r_omc^b#
 capacity_battery_storage=2*350/1000
-#the capacity of battery storage system, e#
+#the capacity of battery storage system (MegaWatt Hour), e#
 SOC_max=0.95*capacity_battery_storage
 #the maximum state of charge of battery system#
 SOC_min=0.05*capacity_battery_storage
 #the minimum state of charge of battery system#
 area_solarPV=1400/(1000*1000)
-#the area of the solar PV system, a#
+#the area of the solar PV system (km^2), a#
 efficiency_solarPV=0.2
 #the efficiency of the solar PV system, delta#
 density_of_air=1.225
-#calculate the rated power of the wind turbine, density of air, rho#
+#calculate the rated power of the wind turbine, density of air (10^6kg/km^3), rho#
 radius_wind_turbine_blade=25/1000
-#calculate the rated power of the wind turbine, radius of the wind turbine blade, r#
+#calculate the rated power of the wind turbine, radius of the wind turbine blade (km), r#
 average_wind_speed=3.952/1000
-#calculate the rated power of the wind turbine, average wind speed, v_avg (from the windspeed table)#
+#calculate the rated power of the wind turbine, average wind speed (km/s), v_avg (from the windspeed table)#
 power_coefficient=0.593
 #calculate the rated power of the wind turbine, power coefficient, theta#
 gearbox_transmission_efficiency=0.9
 #calculate the rated power of the wind turbine, gearbox transmission efficiency, eta_t#
 electrical_generator_efficiency=0.9
 #calculate the rated power of the wind turbine, electrical generator efficiency, eta_g#
-#rated_power_wind_turbine=878.1101
 rated_power_wind_turbine=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radius_wind_turbine_blade*average_wind_speed*average_wind_speed*average_wind_speed*power_coefficient*gearbox_transmission_efficiency*electrical_generator_efficiency
 #the rated power of the wind turbine, RP_w#
 number_windturbine=1
@@ -62,23 +61,23 @@ number_windturbine=1
 number_generators=1
 #the number of generators, n_g#
 rated_output_power_generator=65/1000
-#the rated output power of the generator, G_p#
+#the rated output power of the generator (MegaWatt), G_p#
 unit_reward_production=5/1000
-#the unit reward for each unit of production, i.e. the r^p, this applies to the end of the machine sequence#
+#the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 unit_reward_soldbackenergy=0.2/10
-#the unit reward from sold back energy, r^sb#
+#the unit reward from sold back energy (10^4%/MegaWattHour), r^sb#
 number_machines=5
 #the total number of machines in the manufacturing system, total number of buffers=number_machines-1#
 machine_lifetime_scale_parameter=[111.39/60, 51.1/60, 110.9/60, 239.1/60, 112.1/60]
-#the set of machine lifetime scale parameters, size=number_machines#
+#the set of machine lifetime scale parameters (hour), size=number_machines#
 machine_lifetime_shape_parameter=[1.5766, 1.6532, 1.7174, 1.421, 1.591]
 #the set of machine lifetime shape parameters, size=number_machines#
 machine_repairtime_mean=[4.95/60, 11.7/60, 15.97/60, 27.28/60, 18.37/60]
-#the set of machine repairtime mean parameters, size=number_machines#
+#the set of machine repairtime mean parameters (hour), size=number_machines#
 machine_power_consumption_Opr=[11.55/100, 11.55/100, 11.55/100, 17.05/100, 13.2/100]
-#the set of amount of power drawn by the machine if the machine state is Opr (Operating), size=number_machines#
+#the set of amount of power drawn (MegaWatt) by the machine if the machine state is Opr (Operating), size=number_machines#
 machine_power_consumption_Idl=[10.5/100, 10.5/100, 10.5/100, 15.5/100, 12/100]
-#the set of amount of power drawn by the machine if the machine state is Sta (Starvation) or Blo (Blockage), both are Idl (Idle) states, size=number_machines#
+#the set of amount of power drawn (MegaWatt) by the machine if the machine state is Sta (Starvation) or Blo (Blockage), both are Idl (Idle) states, size=number_machines#
 list_buffer_max=[4, 4, 4, 4]
 list_buffer_min=[0, 0, 0, 0]
 #the maximum and minumum of buffers, size=number_machine-1#
@@ -204,14 +203,15 @@ class Machine(object):
                 IsBrk=False
         return IsBrk
     
-    def PrintMachine(self):
+    def PrintMachine(self, file):
         #print the status of the current machine: state, control_action taken, Energy Consumption, throughput, decide whether the next machine state is Brk#
-        print("Machine", self.name, "=", self.state, ",", "action=", self.control_action)
-        print(" Energy Consumption=", self.EnergyConsumption())
+        print("Machine", self.name, "=", self.state, ",", "action=", self.control_action, file=file)
+        print(" Energy Consumption=", self.EnergyConsumption(), file=file)
         if self.is_last_machine:
-            print(" ")
-            print(" throughput=", self.LastMachineProduction())
-        return " "
+            print(" ", file=file)
+            print(" throughput=", self.LastMachineProduction(), file=file)
+            print("\n", file=file)
+        return None
         
         
         
@@ -268,10 +268,11 @@ class Buffer(object):
             nextstate=self.buffer_min
         return nextstate
 
-    def PrintBuffer(self):
+    def PrintBuffer(self, file):
         #print the status of the current buffer: buffer state, next buffer state#
-        print("Buffer", self.name, "=", self.state)
-        return " "
+        print("Buffer", self.name, "=", self.state, file=file)
+        print("\n", file=file)
+        return None
 
 
         
@@ -399,21 +400,22 @@ class Microgrid(object):
         #calculate the sold back reward (benefit)#
         return (self.actions_solar[3-1]+self.actions_wind[3-1]+self.actions_generator[3-1])*unit_reward_soldbackenergy
     
-    def PrintMicrogrid(self):
+    def PrintMicrogrid(self, file):
         #print the current and the next states of the microgrid#
-        print("Microgrid working status [solar PV, wind turbine, generator]=", self.workingstatus, ", SOC=", self.SOC)
-        print(" microgrid actions [solar PV, wind turbine, generator]=", self.actions_adjustingstatus)
-        print(" solar energy supporting [manufaturing, charging battery, sold back]=", self.actions_solar)
-        print(" wind energy supporting [manufacturing, charging battery, sold back]=", self.actions_wind)
-        print(" generator energy supporting [manufacturing, charging battery, sold back]=", self.actions_generator)
-        print(" energy purchased from grid supporting [manufacturing, charging battery]=", self.actions_purchased)
-        print(" energy discharged by the battery supporting manufacturing=", self.actions_discharged)
-        print(" solar irradiance=", self.solarirradiance)
-        print(" wind speed=", self.windspeed)
-        print(" Microgrid Energy Consumption=", self.EnergyConsumption())
-        print(" Microgrid Operational Cost=", self.OperationalCost())
-        print(" Microgrid SoldBackReward=", self.SoldBackReward())
-        return " "
+        print("Microgrid working status [solar PV, wind turbine, generator]=", self.workingstatus, ", SOC=", self.SOC, file=file)
+        print(" microgrid actions [solar PV, wind turbine, generator]=", self.actions_adjustingstatus, file=file)
+        print(" solar energy supporting [manufaturing, charging battery, sold back]=", self.actions_solar, file=file)
+        print(" wind energy supporting [manufacturing, charging battery, sold back]=", self.actions_wind, file=file)
+        print(" generator energy supporting [manufacturing, charging battery, sold back]=", self.actions_generator, file=file)
+        print(" energy purchased from grid supporting [manufacturing, charging battery]=", self.actions_purchased, file=file)
+        print(" energy discharged by the battery supporting manufacturing=", self.actions_discharged, file=file)
+        print(" solar irradiance=", self.solarirradiance, file=file)
+        print(" wind speed=", self.windspeed, file=file)
+        print(" Microgrid Energy Consumption=", self.EnergyConsumption(), file=file)
+        print(" Microgrid Operational Cost=", self.OperationalCost(), file=file)
+        print(" Microgrid SoldBackReward=", self.SoldBackReward(), file=file)
+        print("\n", file=file)
+        return None
 
 
 """    
@@ -579,7 +581,18 @@ class ManufacturingSystem(object):
         #calculate total throughput TP of the manufacturing system, based on the current machine, buffer, microgrid states and actions#
         #the prduction throughput of the manufacturing system#
         TP=self.machine[number_machines-1].LastMachineProduction()*unit_reward_production
-        return TP        
+        return TP 
+
+    def PrintSystem(self, file, timepoint):
+        for i in range(number_machines):
+            self.machine[i].PrintMachine(file)
+            if i!=number_machines-1:
+                self.buffer[i].PrintBuffer(file)
+        self.grid.PrintMicrogrid(file)
+        print("Average Total Cost=", self.average_total_cost(rate_consumption_charge[timepoint//8640]), file=file)
+        print("\n", file=file)
+        return None
+       
 
 
 
@@ -902,15 +915,14 @@ if __name__ == "__main__":
                                )
     theta=[0,0,0,0,0,0]
     targetoutput=0
-    for t in range(100):
+    
+    number_iteration=100
+    file=open('microgrid_manufacturing_system.txt', 'w')
+    print("\n*********************** RUN THE MICROGRID-MANUFACTURING SYSTEM AT "+str(number_iteration)+" STEPS ***********************", file=file)
+    for t in range(number_iteration):
         #current states and actions S_t and A_t are stored in class System#
-        print("*********************Time Step", t, "*********************")
-        for i in range(number_machines):
-            print(System.machine[i].PrintMachine())
-            if i!=number_machines-1:
-                print(System.buffer[i].PrintBuffer())
-        print(System.grid.PrintMicrogrid())
-        print("Average Total Cost=", System.average_total_cost(rate_consumption_charge[t//8640]))
+        print("*********************Time Step", t, "*********************", file=file)
+        System.PrintSystem(file, t)
         targetoutput+=int(System.throughput()/unit_reward_production)
         #update the theta#
         theta=projection(np.random.uniform(-1,1,size=6))
@@ -955,17 +967,13 @@ if __name__ == "__main__":
                                    buffer_states=next_buffer_states,
                                    grid=grid
                                    )  
-        
+    print("Target Output = ", targetoutput, file=file)
+    
     #test the tree structure in the generation of all admissible machine actions#
     #test the generation of all admissible microgrid adjusting actions and actions for energy purchased/discharged#
-    print("*********************Test the Maachine and Microgrid Action Generation*********************")
+    print("\n*********************** Test the Machine and Microgrid Action Generation ***********************", file=file)
     #first print the current system parameters#
-    for i in range(number_machines):
-        print(System.machine[i].PrintMachine())
-        if i!=number_machines-1:
-            print(System.buffer[i].PrintBuffer())
-    print(System.grid.PrintMicrogrid())
-    print("Average Total Cost=", System.average_total_cost(rate_consumption_charge[t//8640]), "\n")
+    System.PrintSystem(file, t)
     #generate the admissible machine actions from the tree structure#
     machine_action_tree=MachineActionTree(machine_action="ROOT")
     machine_action_tree.BuildTree(System, level=0, tree=machine_action_tree)
@@ -974,25 +982,25 @@ if __name__ == "__main__":
     machine_action_set_list=machine_action_tree.machine_action_set_list
     i=1
     for machine_action_list in machine_action_set_list:
-        print("admissible machine action", i, "=", machine_action_list)
+        print("admissible machine action", i, "=", machine_action_list, file=file)
         i=i+1
     #generate the admissible microgrid actions for adjusting status and purchased/discharged
     microgrid_action_set_DR=MicrogridActionSet_Discrete_Remainder(System)
     microgrid_action_set_list_adjustingstatus=microgrid_action_set_DR.List_AdjustingStatus()
     i=1
-    print("\n")
+    print("\n", file=file)
     for microgrid_action_list_adjustingstatus in microgrid_action_set_list_adjustingstatus:
-        print("admissible microgrid action", i," for adjusting status=", microgrid_action_list_adjustingstatus)
+        print("admissible microgrid action", i," for adjusting status=", microgrid_action_list_adjustingstatus, file=file)
         i=i+1
 
     microgrid_action_set_list_purchased_discharged=microgrid_action_set_DR.List_PurchasedDischarged(actions_solar=[0,0,0],
                                                                                                     actions_wind=[0,0,0],
                                                                                                     actions_generator=[0,0,0])
     i=1
-    print("\n")
+    print("\n",file=file)
     for microgrid_action_list_purchased_discharged in microgrid_action_set_list_purchased_discharged:
         print("admissible microgrid action", i," for purchase=", microgrid_action_list_purchased_discharged[0],
-              ", admissible microgrid action", i," for discharge=", microgrid_action_list_purchased_discharged[1])
+              ", admissible microgrid action", i," for discharge=", microgrid_action_list_purchased_discharged[1], file=file)
         i=i+1
-   
-    print("\nTarget Output = ", targetoutput)
+        
+    file.close()

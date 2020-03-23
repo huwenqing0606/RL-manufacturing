@@ -488,6 +488,7 @@ def Reinforcement_Learning_Testing(System_init, #the initial point of the system
     #output the result to a file test_output.txt#
     testoutput = open('test_output.txt', 'w') 
 
+    print("************************* Optimal System with optimal policy *************************", file=testoutput)
     print("***Run the system on optimal policy at a time horizon=", number_iteration,"***", file=testoutput)
     print("\n", file=testoutput)
     print("initial proportion of energy supply=", thetainit, file=testoutput)
@@ -517,35 +518,13 @@ def Reinforcement_Learning_Testing(System_init, #the initial point of the system
         #current states and actions S_t and A_t are stored in class System#
         #Print (S_t, A_t)#
         print("*********************Time Step", t, "*********************", file=testoutput)
-        for i in range(number_machines):
-            print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action, file=testoutput)
-            print(" Energy Consumption=", System.machine[i].EnergyConsumption(), file=testoutput)
-            if System.machine[i].is_last_machine:
-                print("\n", file=testoutput)
-                print(" throughput=", System.machine[i].LastMachineProduction(), file=testoutput)
-            print("\n", file=testoutput)
-            if i!=number_machines-1:
-                print("Buffer", System.buffer[i].name, "=", System.buffer[i].state, file=testoutput)
-        print("Microgrid working status [solar PV, wind turbine, generator]=", System.grid.workingstatus, ", SOC=", System.grid.SOC, file=testoutput)
-        print(" microgrid actions [solar PV, wind turbine, generator]=", System.grid.actions_adjustingstatus, file=testoutput)
-        print(" solar energy supporting [manufaturing, charging battery, sold back]=", System.grid.actions_solar, file=testoutput)
-        print(" wind energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_wind, file=testoutput)
-        print(" generator energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_generator, file=testoutput)
-        print(" energy purchased from grid supporting [manufacturing, charging battery]=", System.grid.actions_purchased, file=testoutput)
-        print(" energy discharged by the battery supporting manufacturing=", System.grid.actions_discharged, file=testoutput)
-        print(" solar irradiance=", System.grid.solarirradiance, file=testoutput)
-        print(" wind speed=", System.grid.windspeed, file=testoutput)
-        print(" Microgrid Energy Consumption=", System.grid.EnergyConsumption(), file=testoutput)
-        print(" Microgrid Operational Cost=", System.grid.OperationalCost(), file=testoutput)
-        print(" Microgrid SoldBackReward=", System.grid.SoldBackReward(), file=testoutput)
+        System.PrintSystem(testoutput, t)
         #accumulate the total throughput#
         totalthroughput+=System.throughput()
         RL_target_output+=int(System.throughput()/unit_reward_production)
         totalthroughputlist_optimal.append(totalthroughput)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
         E=System.average_total_cost(rate_consumption_charge[t//8640])
-        print("\n", file=testoutput)
-        print("Average Total Cost=", E, file=testoutput)
         #accumulate the total cost#
         totalcost+=E
         totalcostlist_optimal.append(totalcost)
@@ -656,14 +635,15 @@ def Reinforcement_Learning_Testing(System_init, #the initial point of the system
                                    )        
         #end of the iteration loop for reinforcement learning training process#
 
-    print("total cost list=", totalcostlist_optimal, file=testoutput)
-    print("total throughput list=", totalthroughputlist_optimal, file=testoutput)
-    print("total energy demand list=", totalenergydemandlist_optimal, file=testoutput)
+    print("\n****************** SUMMARY *******************", file=testoutput)
+    print("\ntotal cost list=", totalcostlist_optimal, file=testoutput)
+    print("\ntotal throughput list=", totalthroughputlist_optimal, file=testoutput)
+    print("\ntotal energy demand list=", totalenergydemandlist_optimal, file=testoutput)
 
-    print("total cost=", totalcost, file=testoutput)    
-    print("total throughput=", totalthroughput, file=testoutput)    
-    print("total energy demand=", totalenergydemand, file=testoutput)
-    print("target output=", RL_target_output, file=testoutput)
+    print("\ntotal cost=", totalcost, file=testoutput)    
+    print("\ntotal throughput=", totalthroughput, file=testoutput)    
+    print("\ntotal energy demand=", totalenergydemand, file=testoutput)
+    print("\ntarget output=", RL_target_output, file=testoutput)
     
     #close and save the test output file
     testoutput.close()
@@ -688,7 +668,7 @@ def Benchmark_RandomAction_Testing(System_init, #the inital point of running the
     bmoutput = open('benchmark_output.txt', 'w')
 
     #As benchmark, with initial theta and randomly simulated actions, run the system at a certain time horizon#
-    print("\n*************************BenchMark System with initial theta and random actions*************************", file=bmoutput)
+    print("************************* BenchMark System with initial theta and random actions *************************", file=bmoutput)
     print("***Run the system on random policy at a time horizon=", number_iteration,"***", file=bmoutput)
     print("\n", file=bmoutput)
     print("initial proportion of energy supply=", thetainit, file=bmoutput)
@@ -711,37 +691,15 @@ def Benchmark_RandomAction_Testing(System_init, #the inital point of running the
     for t in range(number_iteration):
         #start of the iteration loop for a benchmark system with initial theta and random actions#
         #current states and actions S_t and A_t are stored in class System#
-        #Pring (S_t, A_t)#
+        #Print (S_t, A_t)#
         print("*********************Time Step", t, "*********************", file=bmoutput)
-        for i in range(number_machines):
-            print("Machine", System.machine[i].name, "=", System.machine[i].state, ",", "action=", System.machine[i].control_action, file=bmoutput)
-            print(" Energy Consumption=", System.machine[i].EnergyConsumption(), file=bmoutput)
-            if System.machine[i].is_last_machine:
-                print("\n", file=bmoutput)
-                print(" throughput=", System.machine[i].LastMachineProduction(), file=bmoutput)
-            print("\n", file=bmoutput)
-            if i!=number_machines-1:
-                print("Buffer", System.buffer[i].name, "=", System.buffer[i].state, file=bmoutput)
-        print("Microgrid working status [solar PV, wind turbine, generator]=", System.grid.workingstatus, ", SOC=", System.grid.SOC, file=bmoutput)
-        print(" microgrid actions [solar PV, wind turbine, generator]=", System.grid.actions_adjustingstatus, file=bmoutput)
-        print(" solar energy supporting [manufaturing, charging battery, sold back]=", System.grid.actions_solar, file=bmoutput)
-        print(" wind energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_wind, file=bmoutput)
-        print(" generator energy supporting [manufacturing, charging battery, sold back]=", System.grid.actions_generator, file=bmoutput)
-        print(" energy purchased from grid supporting [manufacturing, charging battery]=", System.grid.actions_purchased, file=bmoutput)
-        print(" energy discharged by the battery supporting manufacturing=", System.grid.actions_discharged, file=bmoutput)
-        print(" solar irradiance=", System.grid.solarirradiance, file=bmoutput)
-        print(" wind speed=", System.grid.windspeed, file=bmoutput)
-        print(" Microgrid Energy Consumption=", System.grid.EnergyConsumption(), file=bmoutput)
-        print(" Microgrid Operational Cost=", System.grid.OperationalCost(), file=bmoutput)
-        print(" Microgrid SoldBackReward=", System.grid.SoldBackReward(), file=bmoutput)
+        System.PrintSystem(bmoutput, t)
         #accumulate the total throughput#
         totalthroughput+=System.throughput()
         random_target_output+=int(System.throughput()/unit_reward_production)
         totalthroughputlist_benchmark.append(totalthroughput)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
         E=System.average_total_cost(rate_consumption_charge[t//8640])
-        print("\n", file=bmoutput)
-        print("Average Total Cost=", E, file=bmoutput)
         #accumulate the total cost#
         totalcost+=E
         totalcostlist_benchmark.append(totalcost)
@@ -791,15 +749,16 @@ def Benchmark_RandomAction_Testing(System_init, #the inital point of running the
                                    grid=grid
                                    )        
         #end of the iteration loop for for a benchmark system with initial theta and random actions#
+
+    print("\n****************** SUMMARY *******************", file=bmoutput)    
+    print("\ntotal cost list=", totalcostlist_benchmark, file=bmoutput)
+    print("\ntotal throughput list=", totalthroughputlist_benchmark, file=bmoutput)
+    print("\ntotal energy demand list=", totalenergydemandlist_benchmark, file=bmoutput)
     
-    print("total cost list=", totalcostlist_benchmark, file=bmoutput)
-    print("total throughput list=", totalthroughputlist_benchmark, file=bmoutput)
-    print("total energy demand list=", totalenergydemandlist_benchmark, file=bmoutput)
-    
-    print("total cost=", totalcost, file=bmoutput)    
-    print("total throughput=", totalthroughput, file=bmoutput)   
-    print("total energy demand=", totalenergydemand, file=bmoutput)
-    print("target output=", random_target_output, file=bmoutput)
+    print("\ntotal cost=", totalcost, file=bmoutput)    
+    print("\ntotal throughput=", totalthroughput, file=bmoutput)   
+    print("\ntotal energy demand=", totalenergydemand, file=bmoutput)
+    print("\ntarget output=", random_target_output, file=bmoutput)
     
     #close and save the benchmark output file
     bmoutput.close()
