@@ -887,16 +887,9 @@ class MachineActionTree(object):
             self.machine_action_set_list.append(machine_action_list_copy)
             return None
 
-
-
-"""
-################################ MAIN TESTING FILE #####################################
-################################ FOR DEBUGGING ONLY #####################################
-
-testing on random admissible actions
-testing on the generation of admissible actions
-"""
-if __name__ == "__main__":
+#initialize the microgrid and manufacturing system
+def SystemInitialize(initial_machine_states, initial_machine_actions, initial_buffer_states):
+    #the System is initialized with initial machine and buffer states, all other parameters are set to be 0
     grid=Microgrid(workingstatus=[0,0,0],
                    SOC=0,
                    actions_adjustingstatus=[0,0,0],
@@ -908,14 +901,35 @@ if __name__ == "__main__":
                    solarirradiance=0,
                    windspeed=0
                    )
-    System=ManufacturingSystem(machine_states=["Opr" for _ in range(number_machines)],
-                               machine_control_actions=["K" for _ in range(number_machines)],
-                               buffer_states=[2 for _ in range(number_machines-1)],
+    System=ManufacturingSystem(machine_states=initial_machine_states,
+                               machine_control_actions=initial_machine_actions,
+                               buffer_states=initial_buffer_states,
                                grid=grid
                                )
-    theta=[0,0,0,0,0,0]
-    targetoutput=0
+    return System
     
+    
+"""
+################################ MAIN TESTING FILE #####################################
+################################ FOR DEBUGGING ONLY #####################################
+
+testing on random admissible actions
+testing on the generation of admissible actions
+"""
+if __name__ == "__main__":
+    
+    #set the initial machine states, machine control actions and buffer states
+    initial_machine_states=["Opr" for _ in range(number_machines)]
+    initial_machine_actions=["K" for _ in range(number_machines)]
+    initial_buffer_states=[2 for _ in range(number_machines-1)]
+    
+    #initialize the system
+    System=SystemInitialize(initial_machine_states, initial_machine_actions, initial_buffer_states)
+    
+    #initialize the theta
+    theta=[0,0,0,0,0,0]
+    
+    targetoutput=0
     number_iteration=100
     file=open('microgrid_manufacturing_system.txt', 'w')
     print("\n*********************** RUN THE MICROGRID-MANUFACTURING SYSTEM AT "+str(number_iteration)+" STEPS ***********************", file=file)

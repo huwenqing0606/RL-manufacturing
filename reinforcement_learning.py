@@ -5,7 +5,7 @@ Created on Fri Jan  3 14:33:36 2020
 Title: Reinforcement Learning for the joint control of onsite microgrid and manufacturing system
 """
 
-from microgrid_manufacturing_system import Microgrid, ManufacturingSystem, ActionSimulation, MicrogridActionSet_Discrete_Remainder, MachineActionTree
+from microgrid_manufacturing_system import Microgrid, ManufacturingSystem, ActionSimulation, MicrogridActionSet_Discrete_Remainder, MachineActionTree, SystemInitialize
 from projectionSimplex import projection
 import numpy as np
 import matplotlib.pyplot as plt
@@ -791,24 +791,14 @@ When optimal policy is found, must add
 
 if __name__ == "__main__":
     
-    #initialize the grid and the manufacturing system
-    grid=Microgrid(workingstatus=[0,0,0],
-                   SOC=0,
-                   actions_adjustingstatus=[0,0,0],
-                   actions_solar=[0,0,0],
-                   actions_wind=[0,0,0],
-                   actions_generator=[0,0,0],
-                   actions_purchased=[0,0],
-                   actions_discharged=0,
-                   solarirradiance=0,
-                   windspeed=0
-                   )
-    System=ManufacturingSystem(machine_states=["Opr" for _ in range(number_machines)],
-                               machine_control_actions=["K" for _ in range(number_machines)],
-                               buffer_states=[2 for _ in range(number_machines-1)],
-                               grid=grid
-                               )
+    #set the initial machine states, machine control actions and buffer states
+    initial_machine_states=["Opr" for _ in range(number_machines)]
+    initial_machine_actions=["K" for _ in range(number_machines)]
+    initial_buffer_states=[2 for _ in range(number_machines-1)]
     
+    #initialize the system
+    System=SystemInitialize(initial_machine_states, initial_machine_actions, initial_buffer_states)
+   
     #randomly generate an initial theta and plot the bounday of the simplex where theta moves#
     r=np.random.uniform(0,1,size=6)
     
@@ -838,23 +828,8 @@ if __name__ == "__main__":
     omegaoptimal=omega  
     my_critic_optimal=my_critic
 
-    #initialize the grid and the manufacturing system
-    grid=Microgrid(workingstatus=[0,0,0],
-                   SOC=0,
-                   actions_adjustingstatus=[0,0,0],
-                   actions_solar=[0,0,0],
-                   actions_wind=[0,0,0],
-                   actions_generator=[0,0,0],
-                   actions_purchased=[0,0],
-                   actions_discharged=0,
-                   solarirradiance=0,
-                   windspeed=0
-                   )
-    System=ManufacturingSystem(machine_states=["Opr" for _ in range(number_machines)],
-                               machine_control_actions=["K" for _ in range(number_machines)],
-                               buffer_states=[2 for _ in range(number_machines-1)],
-                               grid=grid
-                               )
+    #initialize the system
+    System=SystemInitialize(initial_machine_states, initial_machine_actions, initial_buffer_states)
 
     totalcostlist_optimal, totalthroughputlist_optimal, totalenergydemandlist_optimal, RL_target_output = Reinforcement_Learning_Testing(System, 
                                                                                                                                          thetainit, 
@@ -866,23 +841,8 @@ if __name__ == "__main__":
     
     #As benchmark, with initial theta and randomly simulated actions, run the system at a certain time horizon#
     
-    #initialize the grid and the manufacturing system
-    grid=Microgrid(workingstatus=[0,0,0],
-                   SOC=0,
-                   actions_adjustingstatus=[0,0,0],
-                   actions_solar=[0,0,0],
-                   actions_wind=[0,0,0],
-                   actions_generator=[0,0,0],
-                   actions_purchased=[0,0],
-                   actions_discharged=0,
-                   solarirradiance=0,
-                   windspeed=0
-                   )
-    System=ManufacturingSystem(machine_states=["Opr" for _ in range(number_machines)],
-                               machine_control_actions=["K" for _ in range(number_machines)],
-                               buffer_states=[2 for _ in range(number_machines-1)],
-                               grid=grid
-                               )
+    #initialize the system
+    System=SystemInitialize(initial_machine_states, initial_machine_actions, initial_buffer_states)
 
     totalcostlist_benchmark, totalthroughputlist_benchmark, totalenergydemandlist_benchmark, random_target_output = Benchmark_RandomAction_Testing(System, 
                                                                                                                                                    thetainit, 

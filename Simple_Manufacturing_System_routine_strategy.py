@@ -217,5 +217,10 @@ def RoutineStrategy_Testing(number_iteration, #the number of testing iterations
 
 if __name__=="__main__":
     #set the optimal production matrx which is a 0-1 matrix, rows=number_machines, columns=testing_number_iteration
-    x=Mixed_Integer_Program(20)
-    print("optimal solution is ", x.T)
+    mipsol = open('sample_mixed_integer_programming_solution.txt', 'w')
+    for i in range(1, 10):
+        print("------------- Target="+str(i*10)+" -------------")
+        print("\nTarget=", 10*i, file=mipsol)
+        x=Mixed_Integer_Program(10*i)
+        print("\noptimal solution is \n", x.T, file=mipsol)
+    mipsol.close()        
