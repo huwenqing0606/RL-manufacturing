@@ -35,3 +35,5 @@ The auxiliary files are
 
   1 year data in 8640 hours (360 days * 24 hours) for solar irradiance, wind speed and rate of consumption charge.
 
+8. <b>real-case parameters-experimental-use.xlsx</b>
+  the scaled real-case parameters for the manufacturing system and the microgrid used in the experiment
