@@ -47,7 +47,8 @@ gamma=0.999
 training_number_iteration=100
 testing_number_iteration=100
 
-
+#the seed for reinforcement training initialization of the network weights and biases
+seed=0
 
 
 """
@@ -296,11 +297,13 @@ def Reinforcement_Learning_Training(System_init, #the initial system
                                     theta_init,  #the initial theta value
                                     lr_theta_init, #the initial learning rate in the theta iteration
                                     lr_omega_init, #the initial learning rate in the omega iteration
-                                    number_iteration #the total number of training iterations
+                                    number_iteration, #the total number of training iterations
+                                    seed #seed for tensorflow (including initialization of weights and bias) for reproducability
                                     ):
     
     tf.enable_eager_execution()
-    tf.set_random_seed(0) #set seed for tensorflow (including initialization of weights and bias) for reproducability
+    #set seed for tensorflow (including initialization of weights and bias) for reproducability
+    tf.set_random_seed(seed)     
     #K.clear_session()
 
     #initialize#
@@ -453,13 +456,14 @@ def Reinforcement_Learning_Training(System_init, #the initial system
     print("\nthe initial theta is given by: ", theta_init, file=troutput)
     print("\nthe optimal theta after training is given by: ", theta, file=troutput)
     #print the L2 difference of the theta between initial and final
-    print("\nthe theta moves at a L^2 cdistance: ", np.sum([np.linalg.norm(new_var-old_var) for new_var, old_var in zip(theta, theta_init)]), file=troutput)
+    print("\nthe theta moves at a L^2 distance: ", np.sum([np.linalg.norm(new_var-old_var) for new_var, old_var in zip(theta, theta_init)]), file=troutput)
 
     #print the initial omega and optimal omega after training for the critic parameters
+    print("\nthe seed for choosing initial weight and bias parameter is given by: ", seed, file=troutput)
     print("\nthe initial omega for the critic is given by: ", omega_init, file=troutput)
     print("\nthe optimal omega for the critic after training is given by: ", omega, file=troutput)
     #print the L2 difference of the omega between initial and final
-    print("\nthe omega moves at a L^2 cdistance: ", np.sum([np.linalg.norm(new_var-old_var) for new_var, old_var in zip(omega, omega_init)]), file=troutput)
+    print("\nthe omega moves at a L^2 distance: ", np.sum([np.linalg.norm(new_var-old_var) for new_var, old_var in zip(omega, omega_init)]), file=troutput)
         
     #close and save the training ouput file
     troutput.close() 
@@ -824,7 +828,8 @@ if __name__ == "__main__":
                                                               thetainit, 
                                                               lr_theta_initial, 
                                                               lr_omega_initial, 
-                                                              training_number_iteration)
+                                                              training_number_iteration,
+                                                              seed)
     
     
     #with the optimal theta and optimal omega at hand, run the system at a certain time horizon#

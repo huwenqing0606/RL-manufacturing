@@ -8,7 +8,7 @@ Created on Sat Mar 21 15:18:07 2020
 Title: Experiment for the paper <<Novel Deep Reinforcement Learning Algorithms applied to Joint Control 
                                     of Manufacturing andOnsite Microgrid System>>
                                     
-####################################MAIN FILE FOR RUNNING#####################################
+#################################### MAIN FILE FOR RUNNING ALL TESTS #####################################
 
 Experiment consists of 
 1. Comparison of the total cost, total throughput and total energy demand for the 
@@ -57,10 +57,11 @@ lr_omega_initial=0.0003
 gamma=0.999
 
 #number of training and testing iterations#
-training_number_iteration=500
+training_number_iteration=10000
 testing_number_iteration=100
 
-
+#the seed for reinforcement training initialization of the network weights and biases
+seed=5
 
 #initialize the grid and the manufacturing system
 grid=Microgrid(workingstatus=[0,0,0],
@@ -99,7 +100,8 @@ theta, omega, my_critic = Reinforcement_Learning_Training(System,
                                                           thetainit, 
                                                           lr_theta_initial, 
                                                           lr_omega_initial, 
-                                                          training_number_iteration)
+                                                          training_number_iteration,
+                                                          seed)
     
     
 #with the optimal theta and optimal omega at hand, run the system at a certain time horizon#
@@ -136,6 +138,9 @@ totalcostlist_optimal, totalthroughputlist_optimal, totalenergydemandlist_optima
                                                                                                                                      unit_reward_production
                                                                                                                                      )
     
+
+
+
 #As benchmark, with initial theta and randomly simulated actions, run the system at a certain time horizon#
     
 #initialize the grid and the manufacturing system
@@ -162,42 +167,48 @@ totalcostlist_benchmark, totalthroughputlist_benchmark, totalenergydemandlist_be
                                                                                                                                                unit_reward_production 
                                                                                                                                                )
 
-#plot and compare the total cost, the total throughput and the total energy demand for optimal control and random control (benchmark)#
-#plot the total cost#
-plt.figure(figsize = (14,10))
-plt.plot(totalcostlist_optimal, '-', color='r')
-plt.plot(totalcostlist_benchmark, '--', color='b')
-plt.xlabel('iteration')
-plt.ylabel('total cost')
-plt.title('Total cost under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
-plt.savefig('totalcost.png')
-plt.show()  
 
-#plot the total throughput#
-plt.figure(figsize = (14,10))
-plt.plot(totalthroughputlist_optimal, '-', color='r')
-plt.plot(totalthroughputlist_benchmark, '--', color='b')
-plt.xlabel('iteration')
-plt.ylabel('total throughput')
-plt.title('Total throughput under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
-plt.savefig('totalthroughput.png')
-plt.show()  
 
-#plot the total energy demand#
-plt.figure(figsize = (14,10))
-plt.plot(totalenergydemandlist_optimal, '-', color='r')
-plt.plot(totalenergydemandlist_benchmark, '--', color='b')
-plt.xlabel('iteration')
-plt.ylabel('total energy demand')
-plt.title('Total energy demand under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
-plt.savefig('totalenergydemand.png')
-plt.show()  
+#if target output is not enough, simply quit, else, continue with comparison and further experiments
+if RL_target_output<0*random_target_output:
+    print("Not enough production! Test Ended Without Plotting the Comparison...")
+else:    
+    #plot and compare the total cost, the total throughput and the total energy demand for optimal control and random control (benchmark)#
+    #plot the total cost#
+    plt.figure(figsize = (14,10))
+    plt.plot(totalcostlist_optimal, '-', color='r')
+    plt.plot(totalcostlist_benchmark, '--', color='b')
+    plt.xlabel('iteration')
+    plt.ylabel('total cost')
+    plt.title('Total cost under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
+    plt.savefig('totalcost.png')
+    plt.show()  
+
+    #plot the total throughput#
+    plt.figure(figsize = (14,10))
+    plt.plot(totalthroughputlist_optimal, '-', color='r')
+    plt.plot(totalthroughputlist_benchmark, '--', color='b')
+    plt.xlabel('iteration')
+    plt.ylabel('total throughput')
+    plt.title('Total throughput under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
+    plt.savefig('totalthroughput.png')
+    plt.show()  
+
+    #plot the total energy demand#
+    plt.figure(figsize = (14,10))
+    plt.plot(totalenergydemandlist_optimal, '-', color='r')
+    plt.plot(totalenergydemandlist_benchmark, '--', color='b')
+    plt.xlabel('iteration')
+    plt.ylabel('total energy demand')
+    plt.title('Total energy demand under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
+    plt.savefig('totalenergydemand.png')
+    plt.show()  
     
 
-"""
-The 2nd Comparision Test: Comparison of the total cost, total throughput and total energy demand for the 
-    optimal policy selected by reinforcement learning and the routine strategy selected by the mixed-integer programming;        
-"""
-target_output=int(RL_target_output)
+    """
+    The 2nd Comparision Test: Comparison of the total cost, total throughput and total energy demand for the 
+        optimal policy selected by reinforcement learning and the routine strategy selected by the mixed-integer programming;        
+    """
+    target_output=int(RL_target_output)
 
-RoutineStrategy_Testing(testing_number_iteration, target_output)
+    RoutineStrategy_Testing(testing_number_iteration, target_output)
