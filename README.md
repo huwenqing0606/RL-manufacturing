@@ -37,4 +37,4 @@ The auxiliary files are
 
 8. <b>real-case parameters-experimental-use.xlsx</b>
   
-  the scaled real-case parameters for the manufacturing system and the microgrid used in the experiment
+  the scaled real-case parameters for the manufacturing system and the microgrid used in the experiment.
