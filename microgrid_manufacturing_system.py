@@ -14,12 +14,12 @@ Set up all parameters that are constant throughout the system
 """
 Delta_t=1
 #the actual time measured in one decision epoch unit, in hours#
-cutin_windspeed=3/1000
-#the cut-in windspeed (km/s), v^ci#
-cutoff_windspeed=11/1000
-#the cut-off windspeed (km/s), v^co#
-rated_windspeed=7/1000
-#the rated windspeed (km/s), v^r#
+cutin_windspeed=3.6*3
+#the cut-in windspeed (km/h), v^ci#
+cutoff_windspeed=3.6*11
+#the cut-off windspeed (km/h), v^co#
+rated_windspeed=3.6*7
+#the rated windspeed (km/h), v^r#
 charging_discharging_efficiency=0.95
 #the charging-discharging efficiency, eta#
 rate_battery_discharge=2/1000
@@ -46,15 +46,16 @@ density_of_air=1.225
 #calculate the rated power of the wind turbine, density of air (10^6kg/km^3), rho#
 radius_wind_turbine_blade=25/1000
 #calculate the rated power of the wind turbine, radius of the wind turbine blade (km), r#
-average_wind_speed=3.952/1000
-#calculate the rated power of the wind turbine, average wind speed (km/s), v_avg (from the windspeed table)#
+average_wind_speed=3.6*3.952
+#calculate the rated power of the wind turbine, average wind speed (km/h), v_avg (from the windspeed table)#
 power_coefficient=0.593
 #calculate the rated power of the wind turbine, power coefficient, theta#
 gearbox_transmission_efficiency=0.9
 #calculate the rated power of the wind turbine, gearbox transmission efficiency, eta_t#
 electrical_generator_efficiency=0.9
 #calculate the rated power of the wind turbine, electrical generator efficiency, eta_g#
-rated_power_wind_turbine=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radius_wind_turbine_blade*average_wind_speed*average_wind_speed*average_wind_speed*power_coefficient*gearbox_transmission_efficiency*electrical_generator_efficiency
+rated_power_wind_turbine_original=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radius_wind_turbine_blade*average_wind_speed*average_wind_speed*average_wind_speed*power_coefficient*gearbox_transmission_efficiency*electrical_generator_efficiency
+rated_power_wind_turbine=rated_power_wind_turbine_original/1000000
 #the rated power of the wind turbine, RP_w#
 number_windturbine=1
 #the number of wind turbine in the onsite generation system, N_w#
@@ -93,13 +94,15 @@ file_rateConsumptionCharge = "rate_consumption_charge.csv"
 
 data_solar = pd.read_csv(file_SolarIrradiance)
 solarirradiance = np.array(data_solar.iloc[:,3])
+#solar irradiance measured by MegaWatt/km^2
 
 data_wind = pd.read_csv(file_WindSpeed)
-windspeed = np.array(data_wind.iloc[:,3])/1000
+windspeed = 3.6*np.array(data_wind.iloc[:,3])
+#windspeed measured by km/h
 
 data_rate_consumption_charge = pd.read_csv(file_rateConsumptionCharge)
 rate_consumption_charge = np.array(data_rate_consumption_charge.iloc[:,4])/10
-
+#rate of consumption charge measured by 10^4$/MegaWatt=10 $/kWh
 
 """
 Define 3 major classes in the system: Machine, Buffer, Microgrid
@@ -186,7 +189,7 @@ class Machine(object):
         #When return False, the next state lies in the set {"Opr", "Sta", "Blo", "Off"}#
         L=self.lifetime_scale_parameter*np.random.weibull(self.lifetime_shape_parameter, 1)
         #the random variable L is the lifetime#
-        D=np.random.exponential(1/self.repairtime_mean)
+        D=np.random.exponential(self.repairtime_mean)
         #the random variable D is the repair time# 
         if self.state=="Brk":
             if D>=Delta_t:

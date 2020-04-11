@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 number_machines=5
 #set the unit reward of production
 unit_reward_production=5/1000
-
+#the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 
 import pandas as pd
 #read the solar irradiance and wind speed data from file#
@@ -41,12 +41,15 @@ file_rateConsumptionCharge = "rate_consumption_charge.csv"
 
 data_solar = pd.read_csv(file_SolarIrradiance)
 solarirradiance = np.array(data_solar.iloc[:,3])
+#solar irradiance measured by MegaWatt/km^2
 
 data_wind = pd.read_csv(file_WindSpeed)
-windspeed = np.array(data_wind.iloc[:,3])/1000
+windspeed = 3.6*np.array(data_wind.iloc[:,3])
+#windspeed measured by km/h
 
 data_rate_consumption_charge = pd.read_csv(file_rateConsumptionCharge)
 rate_consumption_charge = np.array(data_rate_consumption_charge.iloc[:,4])/10
+#rate of consumption charge measured by 10^4$/MegaWatt=10 $/kWh
 
 
 #the initial learning rates for the theta and omega iterations#
@@ -66,7 +69,7 @@ seed=5
 #set the initial machine states, machine control actions and buffer states
 initial_machine_states=["Opr" for _ in range(number_machines)]
 initial_machine_actions=["K" for _ in range(number_machines)]
-initial_buffer_states=[4 for _ in range(number_machines-1)]
+initial_buffer_states=[2 for _ in range(number_machines-1)]
     
 #initialize the system
 System=SystemInitialize(initial_machine_states, initial_machine_actions, initial_buffer_states)
@@ -135,30 +138,30 @@ else:
     #plot and compare the total cost, the total throughput and the total energy demand for optimal control and random control (benchmark)#
     #plot the total cost#
     plt.figure(figsize = (14,10))
-    plt.plot(totalcostlist_optimal, '-', color='r')
-    plt.plot(totalcostlist_benchmark, '--', color='b')
+    plt.plot([value*10000 for value in totalcostlist_optimal], '-', color='r')
+    plt.plot([value*10000 for value in totalcostlist_benchmark], '--', color='b')
     plt.xlabel('iteration')
-    plt.ylabel('total cost')
+    plt.ylabel('total cost ($)')
     plt.title('Total cost under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
     plt.savefig('totalcost.png')
     plt.show()  
 
     #plot the total throughput#
     plt.figure(figsize = (14,10))
-    plt.plot(totalthroughputlist_optimal, '-', color='r')
-    plt.plot(totalthroughputlist_benchmark, '--', color='b')
+    plt.plot([value*10000 for value in totalthroughputlist_optimal], '-', color='r')
+    plt.plot([value*10000 for value in totalthroughputlist_benchmark], '--', color='b')
     plt.xlabel('iteration')
-    plt.ylabel('total throughput')
+    plt.ylabel('total throughput ($)')
     plt.title('Total throughput under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
     plt.savefig('totalthroughput.png')
     plt.show()  
 
     #plot the total energy demand#
     plt.figure(figsize = (14,10))
-    plt.plot(totalenergydemandlist_optimal, '-', color='r')
-    plt.plot(totalenergydemandlist_benchmark, '--', color='b')
+    plt.plot([value*1000 for value in totalenergydemandlist_optimal], '-', color='r')
+    plt.plot([value*1000 for value in totalenergydemandlist_benchmark], '--', color='b')
     plt.xlabel('iteration')
-    plt.ylabel('total energy demand')
+    plt.ylabel('total energy demand (kW)')
     plt.title('Total energy demand under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
     plt.savefig('totalenergydemand.png')
     plt.show()  

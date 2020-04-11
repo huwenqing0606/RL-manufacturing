@@ -20,6 +20,7 @@ import math
 number_machines=5
 #set the unit reward of production
 unit_reward_production=5/1000
+#the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 
 import pandas as pd
 #read the solar irradiance, wind speed and the rate of consumption charge data from file#
@@ -29,12 +30,18 @@ file_rateConsumptionCharge = "rate_consumption_charge.csv"
 
 data_solar = pd.read_csv(file_SolarIrradiance)
 solarirradiance = np.array(data_solar.iloc[:,3])
+#solar irradiance measured by MegaWatt/km^2
     
 data_wind = pd.read_csv(file_WindSpeed)
-windspeed = np.array(data_wind.iloc[:,3])/1000
+windspeed = 3.6*np.array(data_wind.iloc[:,3])
+#windspeed measured by km/h
+
 
 data_rate_consumption_charge = pd.read_csv(file_rateConsumptionCharge)
 rate_consumption_charge = np.array(data_rate_consumption_charge.iloc[:,4])/10
+#rate of consumption charge measured by 10^4$/MegaWatt=10 $/kWh
+
+
 
 #the initial learning rates for the theta and omega iterations#
 lr_theta_initial=0.003
@@ -48,7 +55,7 @@ training_number_iteration=100
 testing_number_iteration=100
 
 #the seed for reinforcement training initialization of the network weights and biases
-seed=0
+seed=5
 
 
 """
@@ -434,9 +441,9 @@ def Reinforcement_Learning_Training(System_init, #the initial system
     
     #plot the reward sequences#
     plt.figure(figsize = (14,10))
-    plt.plot(rewardseq)
+    plt.plot([value*10000 for value in rewardseq])
     plt.xlabel('iteration')
-    plt.ylabel('Sum of rewards during episode')
+    plt.ylabel('Sum of rewards during episode ($)')
     plt.savefig('rewards.png')
     plt.show()       
 
