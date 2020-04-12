@@ -63,7 +63,7 @@ number_generators=1
 #the number of generators, n_g#
 rated_output_power_generator=65/1000
 #the rated output power of the generator (MegaWatt), G_p#
-unit_reward_production=5/1000
+unit_reward_production=1000/1000
 #the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 unit_reward_soldbackenergy=0.2/10
 #the unit reward from sold back energy (10^4%/MegaWattHour), r^sb#
@@ -79,7 +79,7 @@ machine_power_consumption_Opr=[11.55/100, 11.55/100, 11.55/100, 17.05/100, 13.2/
 #the set of amount of power drawn (MegaWatt) by the machine if the machine state is Opr (Operating), size=number_machines#
 machine_power_consumption_Idl=[10.5/100, 10.5/100, 10.5/100, 15.5/100, 12/100]
 #the set of amount of power drawn (MegaWatt) by the machine if the machine state is Sta (Starvation) or Blo (Blockage), both are Idl (Idle) states, size=number_machines#
-list_buffer_max=[4, 4, 4, 4]
+list_buffer_max=[1000, 1000, 1000, 1000]
 list_buffer_min=[0, 0, 0, 0]
 #the maximum and minumum of buffers, size=number_machine-1#
 

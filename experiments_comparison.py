@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 #set the number of machines
 number_machines=5
 #set the unit reward of production
-unit_reward_production=5/1000
+unit_reward_production=1000/1000
 #the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 
 import pandas as pd
@@ -64,12 +64,12 @@ training_number_iteration=5000
 testing_number_iteration=100
 
 #the seed for reinforcement training initialization of the network weights and biases
-seed=5
+seed=2
 
 #set the initial machine states, machine control actions and buffer states
 initial_machine_states=["Opr" for _ in range(number_machines)]
 initial_machine_actions=["K" for _ in range(number_machines)]
-initial_buffer_states=[2 for _ in range(number_machines-1)]
+initial_buffer_states=[100 for _ in range(number_machines-1)]
     
 #initialize the system
 System=SystemInitialize(initial_machine_states, initial_machine_actions, initial_buffer_states)
@@ -146,7 +146,7 @@ else:
     plt.savefig('totalcost.png')
     plt.show()  
 
-    #plot the total throughput#
+    #plot the total throughput, in dollar amount#
     plt.figure(figsize = (14,10))
     plt.plot([value*10000 for value in totalthroughputlist_optimal], '-', color='r')
     plt.plot([value*10000 for value in totalthroughputlist_benchmark], '--', color='b')
@@ -155,18 +155,28 @@ else:
     plt.title('Total throughput under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
     plt.savefig('totalthroughput.png')
     plt.show()  
+    
+    #plot the total throughput, in production units#
+    plt.figure(figsize = (14,10))
+    plt.plot([value/unit_reward_production for value in totalthroughputlist_optimal], '-', color='r')
+    plt.plot([value/unit_reward_production for value in totalthroughputlist_benchmark], '--', color='b')
+    plt.xlabel('iteration')
+    plt.ylabel('total throughput (production unit)')
+    plt.title('Total throughput (production unit) under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
+    plt.savefig('totalthroughput_unit.png')
+    plt.show()  
 
     #plot the total energy demand#
     plt.figure(figsize = (14,10))
-    plt.plot([value*1000 for value in totalenergydemandlist_optimal], '-', color='r')
-    plt.plot([value*1000 for value in totalenergydemandlist_benchmark], '--', color='b')
+    plt.plot([value*10000 for value in totalenergydemandlist_optimal], '-', color='r')
+    plt.plot([value*10000 for value in totalenergydemandlist_benchmark], '--', color='b')
     plt.xlabel('iteration')
-    plt.ylabel('total energy demand (kW)')
-    plt.title('Total energy demand under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
-    plt.savefig('totalenergydemand.png')
+    plt.ylabel('total energy cost ($)')
+    plt.title('Total energy cost under optimal policy (red, solid) and benchmark random policy (blue, dashed)')
+    plt.savefig('totalenergycost.png')
     plt.show()  
     
-
+    
     """
     The 2nd Comparision Test: Comparison of the total cost, total throughput and total energy demand for the 
         optimal policy selected by reinforcement learning and the routine strategy selected by the mixed-integer programming;        

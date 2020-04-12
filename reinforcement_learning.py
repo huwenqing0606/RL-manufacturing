@@ -19,7 +19,7 @@ import math
 #set the number of machines
 number_machines=5
 #set the unit reward of production
-unit_reward_production=5/1000
+unit_reward_production=1000/1000
 #the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 
 import pandas as pd
@@ -55,7 +55,7 @@ training_number_iteration=100
 testing_number_iteration=100
 
 #the seed for reinforcement training initialization of the network weights and biases
-seed=5
+seed=3
 
 
 """

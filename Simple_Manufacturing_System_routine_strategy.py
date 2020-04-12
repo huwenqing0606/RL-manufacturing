@@ -17,7 +17,7 @@ import mip
 dt = 1
 num_machines = 5
 time_horizon = 100
-capacity_of_buffer = [4]*(num_machines-1)
+capacity_of_buffer = [1000]*(num_machines-1)
 rated_power_of_machine = [0.0990357, 0.0870517, 0.0917212, 0.1393991, 0.1028577]
 production_rate_of_machine = [1]*num_machines
 
@@ -218,9 +218,11 @@ def RoutineStrategy_Testing(number_iteration, #the number of testing iterations
 if __name__=="__main__":
     #set the optimal production matrx which is a 0-1 matrix, rows=number_machines, columns=testing_number_iteration
     mipsol = open('sample_mixed_integer_programming_solution.txt', 'w')
-    for i in range(1, 10):
-        print("------------- Target="+str(i*10)+" -------------")
-        print("\nTarget=", 10*i, file=mipsol)
-        x=Mixed_Integer_Program(10*i)
+    print("******************** Optimal Strategy for Simple Mixed-Integer Programming with Target Output from 0-100 ********************\n", file=mipsol)
+    for i in [73]:
+        print("\n------------- Target="+str(i)+" -------------")
+        print("\n------------- Target="+str(i)+" -------------", file=mipsol)
+        print("\nTarget=", i, file=mipsol)
+        x=Mixed_Integer_Program(i)
         print("\noptimal solution is \n", x.T, file=mipsol)
     mipsol.close()        
