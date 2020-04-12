@@ -11,6 +11,7 @@ from projectionSimplex import projection
 
 """
 Set up all parameters that are constant throughout the system
+units of measurement: hour, km, MegaWatt(10^6Watt), 10^4 us dollar ($)
 """
 Delta_t=1
 #the actual time measured in one decision epoch unit, in hours#
@@ -25,13 +26,13 @@ charging_discharging_efficiency=0.95
 rate_battery_discharge=2/1000
 #the rate for discharging the battery (MegaWatt), b#
 unit_operational_cost_solar=0.17/10
-#the unit operational and maintanance cost for generating power from solar PV (10^4$/MegaWatt), r_omc^s#
+#the unit operational and maintanance cost for generating power from solar PV (10^4$/MegaWattHour), r_omc^s#
 unit_operational_cost_wind=0.08/10
-#the unit operational and maintanance cost for generating power from wind turbine (10^4$/MegaWatt), r_omc^w#
+#the unit operational and maintanance cost for generating power from wind turbine (10^4$/MegaWattHour), r_omc^w#
 unit_operational_cost_generator=0.45/10
-#the unit opeartional and maintanance cost for generating power from generator (10^4$/MegaWatt), r_omc^g#
+#the unit opeartional and maintanance cost for generating power from generator (10^4$/MegaWattHour), r_omc^g#
 unit_operational_cost_battery=0.9/10
-#the unit operational and maintanance cost for battery storage system per unit charging/discharging cycle (10^4$/MegaWatt), r_omc^b#
+#the unit operational and maintanance cost for battery storage system per unit charging/discharging cycle (10^4$/MegaWattHour), r_omc^b#
 capacity_battery_storage=2*350/1000
 #the capacity of battery storage system (MegaWatt Hour), e#
 SOC_max=0.95*capacity_battery_storage
@@ -55,18 +56,18 @@ gearbox_transmission_efficiency=0.9
 electrical_generator_efficiency=0.9
 #calculate the rated power of the wind turbine, electrical generator efficiency, eta_g#
 rated_power_wind_turbine_original=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radius_wind_turbine_blade*average_wind_speed*average_wind_speed*average_wind_speed*power_coefficient*gearbox_transmission_efficiency*electrical_generator_efficiency
-rated_power_wind_turbine=rated_power_wind_turbine_original/1000000
-#the rated power of the wind turbine, RP_w#
+rated_power_wind_turbine=rated_power_wind_turbine_original/(1000*1000)
+#the rated power of the wind turbine, RP_w (MegaWatt)#
 number_windturbine=1
 #the number of wind turbine in the onsite generation system, N_w#
 number_generators=1
 #the number of generators, n_g#
 rated_output_power_generator=65/1000
 #the rated output power of the generator (MegaWatt), G_p#
-unit_reward_production=1000/1000
+unit_reward_production=10000/10000
 #the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 unit_reward_soldbackenergy=0.2/10
-#the unit reward from sold back energy (10^4%/MegaWattHour), r^sb#
+#the unit reward from sold back energy (10^4$/MegaWattHour), r^sb#
 number_machines=5
 #the total number of machines in the manufacturing system, total number of buffers=number_machines-1#
 machine_lifetime_scale_parameter=[111.39/60, 51.1/60, 110.9/60, 239.1/60, 112.1/60]
@@ -75,9 +76,9 @@ machine_lifetime_shape_parameter=[1.5766, 1.6532, 1.7174, 1.421, 1.591]
 #the set of machine lifetime shape parameters, size=number_machines#
 machine_repairtime_mean=[4.95/60, 11.7/60, 15.97/60, 27.28/60, 18.37/60]
 #the set of machine repairtime mean parameters (hour), size=number_machines#
-machine_power_consumption_Opr=[11.55/100, 11.55/100, 11.55/100, 17.05/100, 13.2/100]
+machine_power_consumption_Opr=[115.5/1000, 115.5/1000, 115.5/1000, 170.5/1000, 132/1000]
 #the set of amount of power drawn (MegaWatt) by the machine if the machine state is Opr (Operating), size=number_machines#
-machine_power_consumption_Idl=[10.5/100, 10.5/100, 10.5/100, 15.5/100, 12/100]
+machine_power_consumption_Idl=[105/1000, 105/1000, 105/1000, 155/1000, 120/1000]
 #the set of amount of power drawn (MegaWatt) by the machine if the machine state is Sta (Starvation) or Blo (Blockage), both are Idl (Idle) states, size=number_machines#
 list_buffer_max=[1000, 1000, 1000, 1000]
 list_buffer_min=[0, 0, 0, 0]

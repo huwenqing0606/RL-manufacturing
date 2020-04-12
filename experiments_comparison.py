@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 #set the number of machines
 number_machines=5
 #set the unit reward of production
-unit_reward_production=1000/1000
+unit_reward_production=10000/10000
 #the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 
 #the initial learning rates for the theta and omega iterations#

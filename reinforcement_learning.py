@@ -19,7 +19,7 @@ import math
 #set the number of machines
 number_machines=5
 #set the unit reward of production
-unit_reward_production=1000/1000
+unit_reward_production=10000/10000
 #the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 
 #the discount factor gamma when calculating the total cost#
@@ -638,14 +638,14 @@ def Reinforcement_Learning_Testing(System_init, #the initial point of the system
         #end of the iteration loop for reinforcement learning training process#
 
     print("\n****************** SUMMARY *******************", file=testoutput)
-    print("\ntotal cost list=", totalcostlist_optimal, file=testoutput)
-    print("\ntotal throughput list=", totalthroughputlist_optimal, file=testoutput)
-    print("\ntotal energy demand list=", totalenergydemandlist_optimal, file=testoutput)
+    print("\ntotal cost list (10^4$) =", totalcostlist_optimal, file=testoutput)
+    print("\ntotal throughput list (10^4$) =", totalthroughputlist_optimal, file=testoutput)
+    print("\ntotal energy demand list (10^4$) =", totalenergydemandlist_optimal, file=testoutput)
 
-    print("\ntotal cost=", totalcost, file=testoutput)    
-    print("\ntotal throughput=", totalthroughput, file=testoutput)    
-    print("\ntotal energy demand=", totalenergydemand, file=testoutput)
-    print("\ntarget output=", RL_target_output, file=testoutput)
+    print("\ntotal cost ($) =", totalcost*10000, file=testoutput)    
+    print("\ntotal throughput ($) =", totalthroughput*10000, file=testoutput)    
+    print("\ntotal energy demand ($) =", totalenergydemand*10000, file=testoutput)
+    print("\ntarget output (unit) =", RL_target_output, file=testoutput)
     
     #close and save the test output file
     testoutput.close()
@@ -753,14 +753,14 @@ def Benchmark_RandomAction_Testing(System_init, #the inital point of running the
         #end of the iteration loop for for a benchmark system with initial theta and random actions#
 
     print("\n****************** SUMMARY *******************", file=bmoutput)    
-    print("\ntotal cost list=", totalcostlist_benchmark, file=bmoutput)
-    print("\ntotal throughput list=", totalthroughputlist_benchmark, file=bmoutput)
-    print("\ntotal energy demand list=", totalenergydemandlist_benchmark, file=bmoutput)
+    print("\ntotal cost list (10^4$) =", totalcostlist_benchmark, file=bmoutput)
+    print("\ntotal throughput list (10^4$) =", totalthroughputlist_benchmark, file=bmoutput)
+    print("\ntotal energy demand list (10^4$) =", totalenergydemandlist_benchmark, file=bmoutput)
     
-    print("\ntotal cost=", totalcost, file=bmoutput)    
-    print("\ntotal throughput=", totalthroughput, file=bmoutput)   
-    print("\ntotal energy demand=", totalenergydemand, file=bmoutput)
-    print("\ntarget output=", random_target_output, file=bmoutput)
+    print("\ntotal cost ($) =", totalcost*10000, file=bmoutput)    
+    print("\ntotal throughput ($) =", totalthroughput*10000, file=bmoutput)   
+    print("\ntotal energy demand ($) =", totalenergydemand*10000, file=bmoutput)
+    print("\ntarget output (unit) =", random_target_output, file=bmoutput)
     
     #close and save the benchmark output file
     bmoutput.close()
