@@ -33,38 +33,13 @@ number_machines=5
 unit_reward_production=1000/1000
 #the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 
-import pandas as pd
-#read the solar irradiance and wind speed data from file#
-file_SolarIrradiance = "SolarIrradiance.csv"
-file_WindSpeed = "WindSpeed.csv"
-file_rateConsumptionCharge = "rate_consumption_charge.csv"
-
-data_solar = pd.read_csv(file_SolarIrradiance)
-solarirradiance = np.array(data_solar.iloc[:,3])
-#solar irradiance measured by MegaWatt/km^2
-
-data_wind = pd.read_csv(file_WindSpeed)
-windspeed = 3.6*np.array(data_wind.iloc[:,3])
-#windspeed measured by km/h
-
-data_rate_consumption_charge = pd.read_csv(file_rateConsumptionCharge)
-rate_consumption_charge = np.array(data_rate_consumption_charge.iloc[:,4])/10
-#rate of consumption charge measured by 10^4$/MegaWatt=10 $/kWh
-
-
 #the initial learning rates for the theta and omega iterations#
 lr_theta_initial=0.003
 lr_omega_initial=0.0003
 
-#the discount factor gamma when calculating the total cost#
-gamma=0.999
-
 #number of training and testing iterations#
 training_number_iteration=5000
 testing_number_iteration=100
-
-#the seed for reinforcement training initialization of the network weights and biases
-seed=2
 
 #set the initial machine states, machine control actions and buffer states
 initial_machine_states=["Opr" for _ in range(number_machines)]
@@ -93,8 +68,7 @@ theta, omega, my_critic = Reinforcement_Learning_Training(System,
                                                           thetainit, 
                                                           lr_theta_initial, 
                                                           lr_omega_initial, 
-                                                          training_number_iteration,
-                                                          seed)
+                                                          training_number_iteration)
     
     
 #with the optimal theta and optimal omega at hand, run the system at a certain time horizon#
