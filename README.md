@@ -24,6 +24,10 @@ The main files are
 5. <b>Simple_Manufacturing_System_routine_strategy.py</b>
 
   learn the microgrid-manufacturing system using routine strategy via linear mixed-integer programming.
+  
+6. <b>mip-solver.xlsx</b>
+
+  solving the mixed-integer programming total cumulative energy cost and total production units given the mixed-integer programming solution.
 
 The auxiliary files are
 
