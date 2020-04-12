@@ -17,7 +17,7 @@ The main files are
 
   reinforcement learning via two layer fully connected neural network.
 
-4. <b>Simple_Manufacturing_System-Pure_Q-Learning.py</b>
+4. <b>Simple_Manufacturing_System-Pure_Q-Learning.py, 1st_on.npy, 2nd_on.npy, both_off.npy, both_on.npy</b>
 
   learn the microgrid-manufacturing system using pure Q-learning. This is to compare with our new method.
 
