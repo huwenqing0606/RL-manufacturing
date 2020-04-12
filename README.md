@@ -28,17 +28,21 @@ The main files are
 6. <b>mip-solver.xlsx</b>
 
   solving the mixed-integer programming total cumulative energy cost and total production units given the mixed-integer programming solution.
+  
+7. <b>mip_plot.ipynb</b>
+
+  plot the comparison of total energy cost and total production throughput in units for the optimal policy and mixed-integer programming policy.
 
 The auxiliary files are
 
-7. <b>projectionSimplex.py</b>
+8. <b>projectionSimplex.py</b>
 
   proximal operator to the simplex D^c={(x_1, x_2), 0\leq x_i\leq 1, x_1+x_2\leq 1}.
 
-8. <b>SolarIrradiance.csv, WindSpeed.csv, rate_consumption_charge.csv</b>
+9. <b>SolarIrradiance.csv, WindSpeed.csv, rate_consumption_charge.csv</b>
 
   1 year data in 8640 hours (360 days * 24 hours) for solar irradiance, wind speed and rate of consumption charge.
 
-9. <b>real-case parameters-experimental-use.xlsx</b>
+10. <b>real-case parameters-experimental-use.xlsx</b>
   
   the scaled real-case parameters for the manufacturing system and the microgrid used in the experiment.
