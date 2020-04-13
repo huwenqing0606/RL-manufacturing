@@ -58,7 +58,8 @@ electrical_generator_efficiency=0.9
 rated_power_wind_turbine_original=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radius_wind_turbine_blade*average_wind_speed*average_wind_speed*average_wind_speed*power_coefficient*gearbox_transmission_efficiency*electrical_generator_efficiency
 rated_power_wind_turbine=rated_power_wind_turbine_original/(3.6*3.6*3.6)
 #the rated power of the wind turbine, RP_w (MegaWatt=10^6 W), 
-#thus RP_w in MegaWatt=(1 kg/m^3)*(10^3 m)*(10^3 m)*(3.6 m/s)*(3.6 m/s)*(3.6 m/s)=3.6^3*10^6 W=3.6^3 MegaWatt#
+#with the radius_wind_turbine_blade measured in km=10^3m, average wind speed measured in km/hour=3.6m/s, RP_w will be calculated as RP_w_numerical
+#then RP_w in MegaWatt=(1 kg/m^3)*(10^3 m)*(10^3 m)*(3.6 m/s)*(3.6 m/s)*(3.6 m/s)*RP_w_numerical=3.6^3*10^6 RP_w_numerical W=3.6^3 RP_w_numerical MegaWatt#
 number_windturbine=1
 #the number of wind turbine in the onsite generation system, N_w#
 number_generators=1
