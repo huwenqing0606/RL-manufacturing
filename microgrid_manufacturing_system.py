@@ -16,39 +16,39 @@ units of measurement: hour, km, MegaWatt(10^6Watt), 10^4 us dollar ($)
 Delta_t=1
 #the actual time measured in one decision epoch unit, in hours#
 cutin_windspeed=3.6*3
-#the cut-in windspeed (km/h), v^ci#
+#the cut-in windspeed (km/h=1/3.6 m/s), v^ci#
 cutoff_windspeed=3.6*11
-#the cut-off windspeed (km/h), v^co#
+#the cut-off windspeed (km/h=1/3.6 m/s), v^co#
 rated_windspeed=3.6*7
-#the rated windspeed (km/h), v^r#
+#the rated windspeed (km/h=1/3.6 m/s), v^r#
 charging_discharging_efficiency=0.95
 #the charging-discharging efficiency, eta#
 rate_battery_discharge=2/1000
 #the rate for discharging the battery (MegaWatt), b#
 unit_operational_cost_solar=0.17/10
-#the unit operational and maintanance cost for generating power from solar PV (10^4$/MegaWattHour), r_omc^s#
+#the unit operational and maintanance cost for generating power from solar PV (10^4$/MegaWattHour=10 $/kWHour), r_omc^s#
 unit_operational_cost_wind=0.08/10
-#the unit operational and maintanance cost for generating power from wind turbine (10^4$/MegaWattHour), r_omc^w#
+#the unit operational and maintanance cost for generating power from wind turbine (10^4$/MegaWattHour=10 $/kWHour), r_omc^w#
 unit_operational_cost_generator=0.45/10
-#the unit opeartional and maintanance cost for generating power from generator (10^4$/MegaWattHour), r_omc^g#
+#the unit opeartional and maintanance cost for generating power from generator (10^4$/MegaWattHour=10 $/kWHour), r_omc^g#
 unit_operational_cost_battery=0.9/10
-#the unit operational and maintanance cost for battery storage system per unit charging/discharging cycle (10^4$/MegaWattHour), r_omc^b#
+#the unit operational and maintanance cost for battery storage system per unit charging/discharging cycle (10^4$/MegaWattHour=10 $/kWHour), r_omc^b#
 capacity_battery_storage=350/1000
-#the capacity of battery storage system (MegaWatt Hour), e#
+#the capacity of battery storage system (MegaWatt Hour=1000 kWHour), e#
 SOC_max=0.95*capacity_battery_storage
 #the maximum state of charge of battery system#
 SOC_min=0.05*capacity_battery_storage
 #the minimum state of charge of battery system#
 area_solarPV=1400/(1000*1000)
-#the area of the solar PV system (km^2), a#
+#the area of the solar PV system (km^2=1000*1000 m^2), a#
 efficiency_solarPV=0.2
 #the efficiency of the solar PV system, delta#
 density_of_air=1.225
-#calculate the rated power of the wind turbine, density of air (10^6kg/km^3), rho#
+#calculate the rated power of the wind turbine, density of air (10^6kg/km^3=1 kg/m^3), rho#
 radius_wind_turbine_blade=25/1000
-#calculate the rated power of the wind turbine, radius of the wind turbine blade (km), r#
+#calculate the rated power of the wind turbine, radius of the wind turbine blade (km=1000 m), r#
 average_wind_speed=3.6*3.952
-#calculate the rated power of the wind turbine, average wind speed (km/h), v_avg (from the windspeed table)#
+#calculate the rated power of the wind turbine, average wind speed (km/h=1/3.6 m/s), v_avg (from the windspeed table)#
 power_coefficient=0.593
 #calculate the rated power of the wind turbine, power coefficient, theta#
 gearbox_transmission_efficiency=0.9
@@ -57,17 +57,17 @@ electrical_generator_efficiency=0.9
 #calculate the rated power of the wind turbine, electrical generator efficiency, eta_g#
 rated_power_wind_turbine_original=0.5*density_of_air*np.pi*radius_wind_turbine_blade*radius_wind_turbine_blade*average_wind_speed*average_wind_speed*average_wind_speed*power_coefficient*gearbox_transmission_efficiency*electrical_generator_efficiency
 rated_power_wind_turbine=rated_power_wind_turbine_original/(1000*1000)
-#the rated power of the wind turbine, RP_w (MegaWatt)#
+#the rated power of the wind turbine, RP_w (MegaWatt=1000*1000 W)#
 number_windturbine=1
 #the number of wind turbine in the onsite generation system, N_w#
 number_generators=1
 #the number of generators, n_g#
 rated_output_power_generator=65/1000
-#the rated output power of the generator (MegaWatt), G_p#
+#the rated output power of the generator (MegaWatt=1000kW), G_p#
 unit_reward_production=10000/10000
 #the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 unit_reward_soldbackenergy=0.2/10
-#the unit reward from sold back energy (10^4$/MegaWattHour), r^sb#
+#the unit reward from sold back energy (10^4$/MegaWattHour=10 $/kWHour), r^sb#
 number_machines=5
 #the total number of machines in the manufacturing system, total number of buffers=number_machines-1#
 machine_lifetime_scale_parameter=[111.39/60, 51.1/60, 110.9/60, 239.1/60, 112.1/60]
@@ -99,7 +99,7 @@ solarirradiance = np.array(data_solar.iloc[:,3])
 #read the windspeed 
 data_wind = pd.read_csv(file_WindSpeed)
 windspeed = 3.6*np.array(data_wind.iloc[:,3])
-#windspeed measured by km/h
+#windspeed measured by km/h=1/3.6 m/s
 #read the rate of consumption charge
 data_rate_consumption_charge = pd.read_csv(file_rateConsumptionCharge)
 rate_consumption_charge = np.array(data_rate_consumption_charge.iloc[:,4])/10

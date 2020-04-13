@@ -18,7 +18,9 @@ dt = 1
 num_machines = 5
 time_horizon = 100
 capacity_of_buffer = [1000]*(num_machines-1)
-rated_power_of_machine = [0.0990357, 0.0870517, 0.0917212, 0.1393991, 0.1028577]
+#the buffermax
+rated_power_of_machine = [99.0357/1000, 87.0517/1000, 91.7212/1000, 139.3991/1000, 102.8577/1000]
+#rated power of machine measured in MegaWatt = 1000 kW
 production_rate_of_machine = [1]*num_machines
 
 
