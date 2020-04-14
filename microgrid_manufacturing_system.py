@@ -15,11 +15,11 @@ units of measurement: hour, km, MegaWatt(10^6Watt), 10^4 us dollar ($)
 """
 Delta_t=1
 #the actual time measured in one decision epoch unit, in hours#
-cutin_windspeed=3.6*3
+cutin_windspeed=3*3.6
 #the cut-in windspeed (km/h=1/3.6 m/s), v^ci#
-cutoff_windspeed=3.6*11
+cutoff_windspeed=11*3.6
 #the cut-off windspeed (km/h=1/3.6 m/s), v^co#
-rated_windspeed=3.6*7
+rated_windspeed=7*3.6
 #the rated windspeed (km/h=1/3.6 m/s), v^r#
 charging_discharging_efficiency=0.95
 #the charging-discharging efficiency, eta#
@@ -47,7 +47,7 @@ density_of_air=1.225
 #calculate the rated power of the wind turbine, density of air (10^6kg/km^3=1 kg/m^3), rho#
 radius_wind_turbine_blade=25/1000
 #calculate the rated power of the wind turbine, radius of the wind turbine blade (km=1000 m), r#
-average_wind_speed=3.6*3.952
+average_wind_speed=3.952*3.6
 #calculate the rated power of the wind turbine, average wind speed (km/h=1/3.6 m/s), v_avg (from the windspeed table)#
 power_coefficient=0.593
 #calculate the rated power of the wind turbine, power coefficient, theta#

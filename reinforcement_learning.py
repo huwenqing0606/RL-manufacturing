@@ -40,8 +40,8 @@ solarirradiance = np.array(data_solar.iloc[:,3])
 #solar irradiance measured by MegaWatt/km^2
 #read the windspeed    
 data_wind = pd.read_csv(file_WindSpeed)
-windspeed = 3.6*np.array(data_wind.iloc[:,3])
-#windspeed measured by km/h
+windspeed = np.array(data_wind.iloc[:,3])*3.6
+#windspeed measured by km/h=1/3.6 m/s
 #read the rate of consumption charge
 data_rate_consumption_charge = pd.read_csv(file_rateConsumptionCharge)
 rate_consumption_charge = np.array(data_rate_consumption_charge.iloc[:,4])/10
