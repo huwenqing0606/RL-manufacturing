@@ -8,9 +8,9 @@ The run files are
 
   compares the efficiency of optimal solution selected by reinforcement learning, by mixed-integer programming routine          strategy and by benchmark random policy.
   
-2. <b>mip_plot.ipynb</b>
+2. <b>mip_plot.ipynb, average_mip_plot.ipynb</b>
 
-  plot the comparison of total energy cost and total production throughput in units for the optimal policy and mixed-integer programming policy.
+  plot the comparison of total energy cost and total production throughput in units for the optimal policy and mixed-integer programming policy; also plot the average over 3 times of these experiments.
 
 
 The main files are
