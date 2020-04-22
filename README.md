@@ -1,5 +1,5 @@
 # RL-manufacturing
-Source code for the paper <Joint Control of Manufacturing and Onsite Microgrid System via Novel Neural-Network Integrated Reinforcement Learning Algorithms>
+Source code for the paper <<Joint Control of Manufacturing and Onsite Microgrid System via Novel Neural-Network Integrated Reinforcement Learning Algorithms>>
 
 The run files are 
 
