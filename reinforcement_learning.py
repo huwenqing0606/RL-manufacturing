@@ -27,7 +27,7 @@ gamma=0.999
 seed=2
 
 #the probability of using random actions vs. on-policy optimal actions in each step of training
-p_choose_random_action=0
+p_choose_random_action=0.9
 
 import pandas as pd
 #read the solar irradiance, wind speed and the rate of consumption charge data from file#
@@ -319,7 +319,7 @@ def NextAction_OnPolicySimulation(next_machine_states, next_buffer_states, next_
     next_actions_wind=[energy_generated_wind*theta[3-1], energy_generated_wind*theta[4-1], energy_generated_wind*(1-theta[3-1]-theta[4-1])]
     next_actions_generator=[energy_generated_generator*theta[5-1], energy_generated_generator*theta[6-1], energy_generated_generator*(1-theta[5-1]-theta[6-1])]
     #tossing_probability is the probability of using randomly simulated actions, and 1-tossing_probability using on-policy actions
-    indicator=np.random.binomial(n=1,p=probability_randomaction,size=1)
+    indicator=np.random.binomial(n=1, p=probability_randomaction, size=1)
     if indicator==0:
         #use on-policy actions
         #bulid the list of the set of all admissible machine actions#    
@@ -408,7 +408,7 @@ def NextAction_OnPolicySimulation(next_machine_states, next_buffer_states, next_
 
 
 """
-Reinforcement Learning Algorithm: Off policy TD control combined with actor-critique
+Reinforcement Learning Algorithm: On-policy TD control combined with actor-critique
 Algorithm 1 in the paper
 The Training Process of the Reinforcement Learning Algorithm
 """
@@ -801,7 +801,7 @@ def Benchmark_RandomAction_Testing(System_init, #the inital point of running the
 ################################ MAIN TESTING FILE #####################################
 ################################ FOR DEBUGGING ONLY #####################################
 
-Testing the Reinforcement Learning Algorithm: Off policy TD control combined with actor-critique
+Testing the Reinforcement Learning Algorithm: On-policy TD control combined with actor-critique
 Algorithm 1 in the paper
 
 Compare its behavior with randomly selected actions
