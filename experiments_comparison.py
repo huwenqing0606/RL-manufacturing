@@ -5,7 +5,7 @@ Created on Sat Mar 21 15:18:07 2020
 
 @author: Wenqing Hu (Missouri S&T)
 
-Title: Experiment for the paper <<Novel Deep Reinforcement Learning Algorithms applied to Joint Control 
+Title: Experiment for the paper <<Novel Reinforcement Learning Algorithms applied to Joint Control 
                                     of Manufacturing andOnsite Microgrid System>>
                                     
 #################################### MAIN FILE FOR RUNNING ALL TESTS #####################################
