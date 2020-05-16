@@ -14,9 +14,6 @@ import tensorflow as tf
 import math
 #import tensorflow.keras.backend as K
 
-
-
-
 #set the number of machines
 number_machines=5
 #set the unit reward of production
@@ -30,7 +27,7 @@ gamma=0.999
 seed=2
 
 #the probability of using random actions vs. on-policy optimal actions in each step of training
-p_choose_random_action=1
+p_choose_random_action=0
 
 import pandas as pd
 #read the solar irradiance, wind speed and the rate of consumption charge data from file#
@@ -292,7 +289,8 @@ class update_theta(object):
 """
 Given the current theta and omega, determine the next continuous and discrete/remainder actions by finding 
 (1) A^c(theta)=energy distributed in [solar, wind, generator]
-(2) A^{*,d}_{t+1}=argmin_{A^d}Q(S_{t+1}, A^d, A^c(theta), A^r(A^d, A^c(theta)); omega)
+(2) with probability probability_randomaction: A^{*,d}_{t+1}=randomly sampled action
+    with probability 1-probability_randomaction: A^{*,d}_{t+1}=argmin_{A^d}Q(S_{t+1}, A^d, A^c(theta), A^r(A^d, A^c(theta)); omega)
 (3) A^{*,r}_{t+1}=A^r(A^{*,d}_{t+1}, A^c(theta))
 """
 def NextAction_OnPolicySimulation(next_machine_states, next_buffer_states, next_workingstatus, next_SOC, t, my_critic, theta, probability_randomaction):
