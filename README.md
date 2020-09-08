@@ -22,10 +22,9 @@ The main files are
 
   simulates the joint operation of microgrid and manufacturing system.
 
-4. <b>reinforcement_learning.py, GaussianPolicyGradient.py</b>
+4. <b>reinforcement_learning.py</b>
 
   reinforcement learning via two layer fully connected neural network. 
-  implements the Gaussian sampling of continuous policies.
 
 5. <b>Simple_Manufacturing_System-Pure_Q-Learning.py, 1st_on.npy, 2nd_on.npy, both_off.npy, both_on.npy</b>
 
