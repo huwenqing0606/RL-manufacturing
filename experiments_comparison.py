@@ -25,6 +25,7 @@ from Simple_Manufacturing_System_routine_strategy import RoutineStrategy_Testing
 
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 
 #set the number of machines
@@ -63,13 +64,15 @@ plt.figure(figsize = (14,10))
 for i in range(len(x)): 
     plt.plot(x[i], y[i], color='g')
     
-    
+RL_start = time.process_time()    
+
 theta, omega, my_critic = Reinforcement_Learning_Training(System, 
                                                           thetainit, 
                                                           lr_theta_initial, 
                                                           lr_omega_initial, 
                                                           training_number_iteration)
     
+RL_end = time.process_time()
     
 #with the optimal theta and optimal omega at hand, run the system at a certain time horizon#
 #output the optimal theta and optimal omega#
@@ -157,4 +160,12 @@ else:
     """
     target_output=int(RL_target_output)
 
+    routine_start = time.process_time()
+    
     RoutineStrategy_Testing(testing_number_iteration, target_output)
+    
+    routine_end = time.process_time()
+    
+    print("Reinforcement Learning Training Time =", RL_end-RL_start, " seconds \n")
+    print("Mixed-Integer Programming Training Time =", routine_end-routine_start, " seconds")
+
