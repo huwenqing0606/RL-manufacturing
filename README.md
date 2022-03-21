@@ -5,6 +5,8 @@ Joint Control of Manufacturing and Onsite Microgrid System via Novel Neural-Netw
 
 by Yang, J., Sun, Z., Hu, W. and Steimeister, L.
 
+Accepted at <i>Applied Energy</i>.
+
 The run files are 
 
 1. <b>experiments_comparison.py</b>
