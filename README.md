@@ -7,6 +7,8 @@ by Yang, J., Sun, Z., Hu, W. and Steimeister, L.
 
 Accepted at <i>Applied Energy</i>.
 
+<b>The paper with Supplementary Materials is available here as the file MDP_paper_20220220_AppliedEnergyERevise.docx</b>
+
 The run files are 
 
 1. <b>experiments_comparison.py</b>
