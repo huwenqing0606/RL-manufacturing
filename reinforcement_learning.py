@@ -6,7 +6,7 @@ Modified on Fri, May  5, 15:34:52 2020
 Title: Reinforcement Learning for the joint control of onsite microgrid and manufacturing system
 """
 
-from microgrid_manufacturing_system import Microgrid, ManufacturingSystem, ActionSimulation, MicrogridActionSet_Discrete_Remainder, MachineActionTree, SystemInitialize
+from microgrid_manufacturing_system2 import Microgrid, ManufacturingSystem, ActionSimulation, MicrogridActionSet_Discrete_Remainder, MachineActionTree, SystemInitialize
 from projectionSimplex import projection
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ import math
 #set the number of machines
 number_machines=5
 #set the unit reward of production
-unit_reward_production=1000/10000
+unit_reward_production=4000/10000
 #the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 
 #the discount factor gamma when calculating the total cost#
@@ -27,7 +27,7 @@ gamma=0.999
 seed=2
 
 #the probability of using random actions vs. on-policy optimal actions in each step of training
-p_choose_random_action=0.9
+p_choose_random_action=0.9 #0.9
 
 import pandas as pd
 #read the solar irradiance, wind speed and the rate of consumption charge data from file#
@@ -276,7 +276,7 @@ class update_theta(object):
         #output the deterministic policy gradient of the cost with respect to the theta#
         print("Policy gradient; Q_grad_A_c:",Q_grad_A_c)
         policygradient=np.dot(Q_grad_A_c, A_c_grad_theta)
-        return policygradient
+        return policygradient  # it is just for the continuous actions
 
     def update(self, policygradient, lr_theta):
         #deterministic policy gradient on theta#
@@ -293,6 +293,7 @@ Given the current theta and omega, determine the next continuous and discrete/re
     with probability 1-probability_randomaction: A^{*,d}_{t+1}=argmin_{A^d}Q(S_{t+1}, A^d, A^c(theta), A^r(A^d, A^c(theta)); omega)
 (3) A^{*,r}_{t+1}=A^r(A^{*,d}_{t+1}, A^c(theta))
 """
+# This function "NextAction_OnPolicySimulation" gives the manufacturing and microgrid actions from paper
 def NextAction_OnPolicySimulation(next_machine_states, next_buffer_states, next_workingstatus, next_SOC, t, my_critic, theta, probability_randomaction):
     #build an auxiliarysystem with next system and grid states#
     AuxiliarySystem=ManufacturingSystem(machine_states=next_machine_states,
@@ -401,7 +402,9 @@ def NextAction_OnPolicySimulation(next_machine_states, next_buffer_states, next_
         next_machine_actions=next_action.MachineActions()
                     
                 
-                
+        # print("next_machine_actions: ", next_machine_actions, "next_actions_solar: ", next_actions_solar, "next_actions_wind: ", next_actions_wind,
+        #      "next_actions_generator: ", next_actions_generator, "next_microgrid_actions_adjustingstatus: ", next_microgrid_actions_adjustingstatus,
+        #      "next_microgrid_actions_purchased", next_microgrid_actions_purchased, "next_microgrid_actions_discharged", next_microgrid_actions_discharged )
     return next_machine_actions, next_actions_solar, next_actions_wind, next_actions_generator, next_microgrid_actions_adjustingstatus, next_microgrid_actions_purchased, next_microgrid_actions_discharged
 
 
@@ -419,9 +422,9 @@ def Reinforcement_Learning_Training(System_init, #the initial system
                                     number_iteration, #the total number of training iterations
                                     ):
     
-    tf.enable_eager_execution()
+    # tf.enable_eager_execution()
     #set seed for tensorflow (including initialization of weights and bias) for reproducability
-    tf.set_random_seed(seed)     
+    tf.random.set_seed(seed)
     #K.clear_session()
 
     #initialize#
@@ -445,7 +448,7 @@ def Reinforcement_Learning_Training(System_init, #the initial system
     for t in range(number_iteration):
         print("---------- iteration", t, "----------")
         #calculate the total cost at S_t, A_t: E(S_t, A_t)
-        E=System.average_total_cost(rate_consumption_charge[t//8640])
+        E=System.average_total_cost(rate_consumption_charge[t//8640], t)
         #calculate the old Q-value and its gradient wrt omega: Q(S_t, A_t; omega_t) and grad_omega Q(S_t, A_t; omega_t)
         av=action_value(System, my_critic)
         num_list_SA=av.num_list_States_Actions()
@@ -457,7 +460,8 @@ def Reinforcement_Learning_Training(System_init, #the initial system
         theta=upd_tht.update(policy_grad, lr_tht)
         #calculate the next states and actions: S_{t+1}, A_{t+1}#        
         next_machine_states, next_buffer_states=System.transition_manufacturing()
-        next_workingstatus, next_SOC=System.grid.transition()
+        next_workingstatus, next_SOC=System.grid.transition(t)
+        #E = System.average_total_cost(rate_consumption_charge[t // 8640], t)
         #determine A^c(theta)=energy distributed in [solar, wind, generator]
         #determine A^{*,d}_{t+1}=argmin_{A^d}Q(S_{t+1}, A^d, A^c(theta), A^r(A^d, A^c(theta)); omega)
         #determine A^{*,r}_{t+1}=A^r(A^{*,d}_{t+1}, A^c(theta))
@@ -636,7 +640,7 @@ def Reinforcement_Learning_Testing(System_init, #the initial point of the system
         RL_target_output+=int(System.throughput()/unit_reward_production)
         totalthroughputlist_optimal.append(totalthroughput)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
-        E=System.average_total_cost(rate_consumption_charge[t//8640])
+        E=System.average_total_cost(rate_consumption_charge[t//8640], t)
         #accumulate the total cost#
         totalcost+=E
         totalcostlist_optimal.append(totalcost)
@@ -645,7 +649,7 @@ def Reinforcement_Learning_Testing(System_init, #the initial point of the system
         totalenergydemandlist_optimal.append(totalenergydemand)
         #determine the next system and grid states#
         next_machine_states, next_buffer_states=System.transition_manufacturing()
-        next_workingstatus, next_SOC=System.grid.transition()
+        next_workingstatus, next_SOC=System.grid.transition(t)
         #determine the next continuous actions A^c(thetaoptimal)=energy distribued to [solar, wind, generator]#
         #determine the next discrete actions by finding A^{*,d}_{t+1}=argmin_{A^d}Q(S_{t+1}, A^d, A^c(thetaoptimal), A^r(A^d, A^c(thetaoptimal)); omegaoptimal)#
         #determine the next remainder actions A^{*,r}_{t+1}=A^r(A^{*,d}_{t+1}, A^c(thetaoptimal))
@@ -740,7 +744,7 @@ def Benchmark_RandomAction_Testing(System_init, #the inital point of running the
         random_target_output+=int(System.throughput()/unit_reward_production)
         totalthroughputlist_benchmark.append(totalthroughput)
         #calculate the total cost at S_t, A_t: E(S_t, A_t)#
-        E=System.average_total_cost(rate_consumption_charge[t//8640])
+        E=System.average_total_cost(rate_consumption_charge[t//8640], t)
         #accumulate the total cost#
         totalcost+=E
         totalcostlist_benchmark.append(totalcost)
@@ -749,7 +753,7 @@ def Benchmark_RandomAction_Testing(System_init, #the inital point of running the
         totalenergydemandlist_benchmark.append(totalenergydemand)
         #determine the next system and grid states#
         next_machine_states, next_buffer_states=System.transition_manufacturing()
-        next_workingstatus, next_SOC=System.grid.transition()
+        next_workingstatus, next_SOC=System.grid.transition(t)
         #update the manufacturing system and the grid according to S_{t+1}, A^{d}_{t+1}, A^c(thetainit), A^{r}_{t+1}#
         my_critic = critic()
         next_machine_actions, next_actions_solar, next_actions_wind, next_actions_generator, next_microgrid_actions_adjustingstatus, next_microgrid_actions_purchased, next_microgrid_actions_discharged = NextAction_OnPolicySimulation(next_machine_states, 
@@ -820,7 +824,7 @@ if __name__ == "__main__":
 
     #number of training and testing iterations#
     training_number_iteration=5
-    testing_number_iteration=100
+    testing_number_iteration=10
 
 
     #set the initial machine states, machine control actions and buffer states
