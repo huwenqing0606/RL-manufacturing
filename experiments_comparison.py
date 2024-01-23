@@ -18,7 +18,7 @@ optimal policy selected by reinforcement learning and the routine straregy via m
 """
 
 
-from microgrid_manufacturing_system import SystemInitialize
+from microgrid_manufacturing_system2 import SystemInitialize
 from reinforcement_learning import Reinforcement_Learning_Training, Reinforcement_Learning_Testing, Benchmark_RandomAction_Testing
 from Simple_Manufacturing_System_routine_strategy import RoutineStrategy_Testing
 
@@ -31,15 +31,15 @@ import time
 #set the number of machines
 number_machines=5
 #set the unit reward of production
-unit_reward_production=10000/10000
+unit_reward_production=4000/10000
 #the unit reward for each unit of production (10^4$/unit produced), i.e. the r^p, this applies to the end of the machine sequence#
 
 #the initial learning rates for the theta and omega iterations#
-lr_theta_initial=0.003
-lr_omega_initial=0.0003
+lr_theta_initial=0.01 #0.003
+lr_omega_initial=0.001 #0.0003
 
 #number of training and testing iterations#
-training_number_iteration=5000
+training_number_iteration=4900
 testing_number_iteration=100
 
 #set the initial machine states, machine control actions and buffer states
@@ -92,6 +92,7 @@ totalcostlist_optimal, totalthroughputlist_optimal, totalenergydemandlist_optima
                                                                                                                                      unit_reward_production
                                                                                                                                      )
     
+
 
 
 
